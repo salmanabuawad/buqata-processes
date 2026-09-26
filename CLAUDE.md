@@ -2,7 +2,7 @@
 
 Municipal digital-process platform for Buq'ata Local Council. Read
 `docs/ARCHITECTURE.md` and `docs/SECURITY_MODEL.md` before changing anything
-in services, and `docs/DEPLOYMENT.md` before touching deployment.
+in services, and `DEPLOY_SERVER.md` before touching deployment.
 
 ## Invariants — do not break these
 

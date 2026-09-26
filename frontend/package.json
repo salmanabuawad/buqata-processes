@@ -5,7 +5,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "deploy:server": "powershell -ExecutionPolicy Bypass -File ../deploy-to-server.ps1",
+    "deploy:backend": "powershell -ExecutionPolicy Bypass -File ../deploy-backend-to-server.ps1",
+    "deploy:server:all": "powershell -ExecutionPolicy Bypass -File ../deploy-all-to-server.ps1"
   },
   "dependencies": {
     "lucide-react": "^1.48.0",

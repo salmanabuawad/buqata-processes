@@ -44,10 +44,10 @@ Planned next: formal tenders with multi-official approval and MFA step-up
 ```
 backend/     FastAPI, SQLAlchemy 2, Alembic — engines, services, API, tests
 frontend/    Next.js (static export), TypeScript, Tailwind — he/ar/en
-deploy/      remote-deploy.sh, systemd units, nginx site for tender.kortexd.com
+deploy/      setup-server.sh (one-time), systemd units, nginx site for tender.kortexd.com
 docs/        ARCHITECTURE, SECURITY_MODEL, DATABASE_SCHEMA, WORKFLOWS, RBAC,
-             API_DESIGN, DEPLOYMENT, DEMO_GUIDE, ADMIN_GUIDE
-deploy.ps1   one-command deploy
+             API_DESIGN, DEMO_GUIDE, ADMIN_GUIDE
+deploy-*.ps1 deploy scripts (frontend, backend, all) — see DEPLOY_SERVER.md
 ```
 
 ## Run locally
@@ -90,4 +90,4 @@ failures not rolling back submissions.
 
 ## Deploy
 
-`.\deploy.ps1` — see `docs/DEPLOYMENT.md`.
+`.\deploy-all-to-server.ps1` (or `npm run deploy:server:all` from `frontend/`) — see `DEPLOY_SERVER.md`.

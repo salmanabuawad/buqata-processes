@@ -147,10 +147,11 @@ translates them.
 * **Local development** — SQLite, local-disk storage, local KMS key file, mail
   written to `var/outbox/*.eml`, no Redis. `python -m app.cli dev-setup` creates
   and seeds everything.
-* **Ubuntu host (tender.kortexd.com)** — nginx serving the static export and
-  proxying `/api/` to uvicorn on loopback; PostgreSQL 16; systemd units for API
-  and worker; secrets in `/opt/buqata-processes/.env` (mode 600). See
-  `DEPLOYMENT.md`.
+* **Ubuntu host (tender.kortexd.com)** — nginx serving the static export from
+  `/opt/buqata-processes/frontend/dist` and proxying `/api/` to uvicorn on
+  loopback (port 8097); PostgreSQL; systemd units `buqata-processes-backend`
+  and `buqata-processes-worker`; secrets in `/opt/buqata-processes/.env`
+  (mode 600). No Docker. See `DEPLOY_SERVER.md`.
 
 ## 9. Delivery phases
 
