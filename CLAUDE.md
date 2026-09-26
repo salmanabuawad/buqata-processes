@@ -32,6 +32,9 @@ person records the decision with a reason.
 
 ## Things that are easy to get wrong
 
+- No Docker. Development runs natively (SQLite, local storage); the host runs
+  PostgreSQL, nginx and systemd units directly.
+
 - Business time comes from `app.core.clock.now()`; tests freeze it. Sessions
   expire when tests jump the clock — sign in again after a jump.
 - SQLite is for dev/tests only; run the suite against PostgreSQL

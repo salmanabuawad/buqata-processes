@@ -147,8 +147,6 @@ translates them.
 * **Local development** — SQLite, local-disk storage, local KMS key file, mail
   written to `var/outbox/*.eml`, no Redis. `python -m app.cli dev-setup` creates
   and seeds everything.
-* **Docker Compose** — PostgreSQL, Redis, MinIO, API, worker, frontend. For
-  parity testing where Docker is available.
 * **Ubuntu host (tender.kortexd.com)** — nginx serving the static export and
   proxying `/api/` to uvicorn on loopback; PostgreSQL 16; systemd units for API
   and worker; secrets in `/opt/buqata-processes/.env` (mode 600). See
@@ -159,7 +157,7 @@ translates them.
 | Phase | Scope | Status |
 |---|---|---|
 | 1 | Architecture documents | done |
-| 2 | Skeleton: backend, frontend, migrations, tests, compose | done (compose file written, not yet run — no Docker on the dev machine) |
+| 2 | Skeleton: backend, frontend, migrations, tests | done (no Docker: SQLite locally, PostgreSQL + systemd on the host) |
 | 3 | Identity, RBAC, organizations, audit foundation | done (local accounts; Entra ID OIDC adapter not yet written) |
 | 4 | Supplier registry, categories, supplier documents | done |
 | 5 | RFQ end to end (incl. vault sealing needed by RFQ) | done |
