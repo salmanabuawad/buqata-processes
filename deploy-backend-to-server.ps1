@@ -75,8 +75,11 @@ mkdir -p $REMOTE_APP/backend
 rsync -a --delete --exclude=.env --exclude=venv --exclude=.venv --exclude=var --exclude=__pycache__ --exclude='*.pyc' "`$SRC/" $REMOTE_APP/backend/
 rm -rf $REMOTE_TEMP
 $REMOTE_APP/venv/bin/pip install -q -r $REMOTE_APP/backend/requirements.txt
+# Archives made on Windows carry 0777 modes; normalise before anything runs.
 chown -R ${APP_USER}:${APP_USER} $REMOTE_APP/backend
-sudo -u $APP_USER bash -c "cd $REMOTE_APP/backend && set -a && . $REMOTE_APP/.env && set +a && $REMOTE_APP/venv/bin/python -m app.cli migrate && $REMOTE_APP/venv/bin/python -m app.cli seed && $REMOTE_APP/venv/bin/python -m app.cli seed-demo"
+chmod -R u=rwX,go=rX $REMOTE_APP/backend
+cd $REMOTE_APP/backend
+sudo -u $APP_USER env PYTHONPATH=$REMOTE_APP/backend bash -c "cd $REMOTE_APP/backend && set -a && . $REMOTE_APP/.env && set +a && $REMOTE_APP/venv/bin/python -m app.cli migrate && $REMOTE_APP/venv/bin/python -m app.cli seed && $REMOTE_APP/venv/bin/python -m app.cli seed-demo"
 systemctl restart $SERVICE_NAME $WORKER_NAME
 for i in `$(seq 1 20); do curl -fsS http://127.0.0.1:8097/api/v1/health >/dev/null 2>&1 && break; sleep 1; done
 curl -fsS http://127.0.0.1:8097/api/v1/health && echo
@@ -85,10 +88,15 @@ echo Backend deploy done.
 "@
 # PowerShell here-strings are CRLF; bash needs LF.
 $remoteCmd = $remoteCmd -replace "`r`n", "`n"
-& ssh "${USER}@${SERVER}" $remoteCmd
-if ($LASTEXITCODE -ne 0) {
+# Migration and seeding log to stderr; judge success by the exit code, not by
+# PowerShell's treatment of stderr lines as errors.
+$ErrorActionPreference = "Continue"
+& ssh "${USER}@${SERVER}" $remoteCmd 2>&1 | ForEach-Object { "$_" }
+$remoteExit = $LASTEXITCODE
+$ErrorActionPreference = "Stop"
+if ($remoteExit -ne 0) {
     Write-Host "SSH command failed." -ForegroundColor Red
-    exit $LASTEXITCODE
+    exit $remoteExit
 }
 
 Write-Host "Backend deploy complete. Services restarted." -ForegroundColor Green
