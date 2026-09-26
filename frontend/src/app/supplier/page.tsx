@@ -61,7 +61,7 @@ export default function SupplierHome() {
                     <td><StatusBadge status={r.status} phase={r.phase} /></td>
                     <td className="ltr whitespace-nowrap">{formatDateTime(r.deadline, locale)}</td>
                     <td>
-                      {r.submission_status === "SUBMITTED" ? <Badge tone="sealed"><Lock className="size-3" />{t("supplier_home.sealed")}</Badge> :
+                      {r.submission_status === "SUBMITTED" ? <Badge tone="sealed"><Lock className="size-3" />{t("supplier_home.submitted")}</Badge> :
                         r.submission_status === "OPENED" ? <Badge tone="success">{t("supplier_home.opened")}</Badge> :
                         r.submission_status === "STARTED" ? <Badge>{t("supplier_home.started")}</Badge> : <span className="text-muted">—</span>}
                     </td>

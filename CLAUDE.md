@@ -6,16 +6,21 @@ in services, and `DEPLOY_SERVER.md` before touching deployment.
 
 ## Invariants — do not break these
 
-**Staff never choose recipients.** Distribution is computed from categories
-and written as an immutable snapshot. No API accepts inclusion/exclusion
-lists; request models forbid unknown fields. Late matches go into a new
-SUPPLEMENTAL snapshot — never edit an existing one.
+**Distribution is computed, edits are policy.** Recipients come from
+categories and are written as immutable snapshots. Whether staff may then add
+or remove suppliers is the process type's `distribution_editable` flag —
+municipal policy: yes for quotation requests, never for tenders. Every edit
+needs a reason and is audited; additions go into a MANUAL snapshot, removals
+mark the recipient row (`removed_at`), nothing is deleted or rewritten.
 
-**Sealing is cryptographic.** Offers are encrypted with per-version DEKs
-wrapped by the vault's RSA public key. Only `vault.open_vault` (called by the
-opening service after the policy passes) and reads on an OPENED vault unwrap
-the private key. Never add a per-submission open, a cache of plaintext, or a
-bypass for any role.
+**Sealing is cryptographic and chosen per process.** Offers are always
+encrypted with per-version DEKs wrapped by the vault's RSA public key. A
+quotation request picks an `opening_mode` at creation: `visible` (readable by
+the process team as offers arrive), `sealed_anytime` (sealed; may open before
+the deadline, which closes submissions) or `sealed_after_deadline`. Tenders
+are always sealed until the deadline. Only `vault.open_vault` and content
+reads permitted by `definition.content_sealed()` unwrap the private key. Never
+add a per-submission open, a cache of plaintext, or a bypass for any role.
 
 **Every opening re-evaluates the policy** at the moment of opening. Policy
 failures raise typed security events in their own transaction.

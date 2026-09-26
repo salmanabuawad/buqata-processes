@@ -22,6 +22,8 @@ from app.api.schemas import (
     ProcessUpdate,
     ProtocolBody,
     PublishBody,
+    RecipientAddBody,
+    RecipientChangeBody,
 )
 from app.core import clock
 from app.core.errors import Invalid, NotFound
@@ -71,6 +73,8 @@ def process_view(db: Session, ctx: AuthContext, process: Process) -> dict:
         ],
         "timeline": process_service.timeline(db, process),
         "vault_status": vault_row.status if vault_row else None,
+        "opening_mode": (process.details or {}).get("opening_mode"),
+        "content_sealed": definition.content_sealed(process),
         "server_time": clock.now().isoformat(),
     }
     if staff:
@@ -95,9 +99,15 @@ def process_view(db: Session, ctx: AuthContext, process: Process) -> dict:
             },
             "can": {
                 "edit": process.status == "DRAFT" and ctx.has("process.manage") and bool(participation & {"OWNER", "TEAM"}),
-                "open": process.status == "PUBLISHED" and ctx.has("opening.initiate"),
+                "open": process.status == "PUBLISHED" and definition.content_sealed(process)
+                and ctx.has("opening.initiate"),
                 "read_content": ctx.has("submission.read_opened") and bool(participation & set(authorization.CONTENT_PARTICIPATIONS)),
-                "decide": process.status == "OPENED" and ctx.has("decision.record") and bool(participation & set(authorization.CONTENT_PARTICIPATIONS)),
+                "content_readable_now": process_service.content_readable(db, process),
+                "decide": (process.status == "OPENED" or (process.status == "PUBLISHED" and not definition.content_sealed(process)))
+                and ctx.has("decision.record") and bool(participation & set(authorization.CONTENT_PARTICIPATIONS)),
+                "edit_distribution": definition.distribution_editable and process.status == "PUBLISHED"
+                and clock.now() < process.submission_deadline and ctx.has("process.manage")
+                and bool(participation & {"OWNER", "TEAM"}),
                 "protocol": ctx.has("protocol.generate") and bool(participation & set(authorization.CONTENT_PARTICIPATIONS)),
                 "monitor": ctx.has("process.monitor"),
             },
@@ -208,7 +218,9 @@ def preview_distribution(body: DistributionPreviewBody, ctx: AuthContext = Depen
 def publish(process_id: uuid.UUID, body: PublishBody, ctx: AuthContext = Depends(current_context),
             db: Session = Depends(get_db)):
     process = process_service.get(db, process_id)
-    result = process_service.publish(db, ctx, process)
+    result = process_service.publish(db, ctx, process, excluded_supplier_ids=body.excluded_supplier_ids,
+                                     additional_supplier_ids=body.additional_supplier_ids,
+                                     change_reason=body.change_reason)
     db.commit()
     return {**process_view(db, ctx, process), "publication": result}
 
@@ -226,6 +238,26 @@ def cancel(process_id: uuid.UUID, body: CancelBody, ctx: AuthContext = Depends(c
 def fairness(process_id: uuid.UUID, ctx: AuthContext = Depends(current_context), db: Session = Depends(get_db)):
     process = process_service.get(db, process_id)
     return reporting.fairness(db, ctx, process, ctx.user.locale)
+
+
+@router.post("/processes/{process_id}/distribution/recipients")
+def add_recipient(process_id: uuid.UUID, body: RecipientAddBody, ctx: AuthContext = Depends(current_context),
+                  db: Session = Depends(get_db)):
+    process = process_service.get(db, process_id)
+    authorization.require_scope(db, ctx, process, "process.manage", authorization.MANAGE_PARTICIPATIONS)
+    distribution.add_recipient(db, process, body.supplier_id, body.reason, ctx.actor())
+    db.commit()
+    return {"ok": True}
+
+
+@router.post("/processes/{process_id}/distribution/recipients/{supplier_id}/remove")
+def remove_recipient(process_id: uuid.UUID, supplier_id: uuid.UUID, body: RecipientChangeBody,
+                     ctx: AuthContext = Depends(current_context), db: Session = Depends(get_db)):
+    process = process_service.get(db, process_id)
+    authorization.require_scope(db, ctx, process, "process.manage", authorization.MANAGE_PARTICIPATIONS)
+    distribution.remove_recipient(db, process, supplier_id, body.reason, ctx.actor())
+    db.commit()
+    return {"ok": True}
 
 
 @router.post("/processes/{process_id}/participants")
@@ -250,7 +282,7 @@ def add_participant(process_id: uuid.UUID, body: ParticipantBody, ctx: AuthConte
 @router.get("/invitations/{token}", tags=["submissions"])
 def open_invitation(token: str, db: Session = Depends(get_db)):
     recipient = distribution.recipient_by_token(db, token)
-    if recipient is None:
+    if recipient is None or not recipient.active:
         raise NotFound("invitation")
     if recipient.opened_at is None:
         recipient.opened_at = clock.now()

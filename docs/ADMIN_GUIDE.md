@@ -23,13 +23,15 @@ it matching; existing distribution snapshots are unchanged.
 
 The registry is read-only for staff, except status: activating a supplier
 invites it to open processes it matches (supplemental snapshot); suspending it
-stops future invitations. Staff never choose recipients.
+stops future invitations. For quotation requests the process team may add or remove suppliers with a recorded reason; for tenders the list is not editable.
 
 ## Opening policies
 
 Each process copies its type's default opening policy at creation, editable
-until publication and frozen afterwards. RFQ default: after the deadline, by a
-participating procurement manager, one approval. Tender (phase 7) adds
+until publication and frozen afterwards. For quotation requests the policy
+follows the opening mode chosen at creation (visible / sealed, open any time /
+sealed until the deadline); opening is by a participating procurement manager,
+one approval. Tender (phase 7) adds
 municipal network CIDRs, managed device, MFA and M-of-N designated officials.
 The approval count, network ranges and committee structure are municipal and
 legal policy — the software enforces whatever is configured.

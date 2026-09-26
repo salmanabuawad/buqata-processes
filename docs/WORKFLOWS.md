@@ -28,6 +28,10 @@ DRAFT ──publish──▶ PUBLISHED ──open (policy)──▶ OPENED ─�
 Timeline: Draft → Published → Supplier notification → Submission → Deadline →
 Opening → Evaluation → Decision → Closed.
 
+> **Municipal policy for quotation requests** (differs from tenders): the
+> distribution list is generated automatically and may then be edited with a
+> recorded reason, and the opening mode is chosen per request.
+
 ### 1.1 Create (procurement manager, `process.create.rfq`)
 Reference number (auto: `RFQ-2026-0184`, editable while draft), title,
 description, categories (one or more nodes of the tree), technical
@@ -36,8 +40,21 @@ details, additional requirements, attachments. Stored as `DRAFT` with the
 creator as `OWNER`. `PROCESS_CREATED`.
 
 While editing, the form calls the distribution preview and shows
-**"27 registered suppliers match this request."** The preview lists them
-read-only. There is no control — in the UI or the API — to remove one.
+**"27 registered suppliers match this request."** The list can be opened;
+suppliers can be unticked or added from the registry, with one mandatory
+reason for the changes.
+
+**Opening mode** (`details.opening_mode`), chosen at creation and editable
+until publication; it also sets the opening policy:
+
+| Mode | Content | Opening | Decision |
+|---|---|---|---|
+| `visible` (default) | readable by the process team as offers arrive | none needed | any time after publication; closes submissions |
+| `sealed_anytime` | sealed | any time (no time rule); opening closes submissions | after opening |
+| `sealed_after_deadline` | sealed | only after the deadline (time rule) | after opening |
+
+Requests created before opening modes existed were migrated to
+`sealed_after_deadline`, the behaviour they were published under.
 
 ### 1.2 Publish (`process.manage`)
 One transaction:
@@ -55,8 +72,16 @@ One transaction:
 7. Commit. The worker delivers mail afterwards; each delivery writes
    `NOTIFICATION_SENT` or `NOTIFICATION_FAILED`.
 
-The publish request body accepts no recipient fields; unknown fields are
-rejected (`extra="forbid"`).
+The publish body may carry `excluded_supplier_ids`, `additional_supplier_ids`
+and `change_reason` (required when either list is non-empty). Types whose
+definition is not `distribution_editable` refuse them with
+`403 distribution_not_editable`. Exclusions are recorded in the snapshot rule
+and as `DISTRIBUTION_EDITED`.
+
+**After publication**, while submissions are open, the process team may add
+a supplier (`DISTRIBUTION_SUPPLIER_ADDED`, new MANUAL snapshot, invitation
+sent) or remove one (`DISTRIBUTION_SUPPLIER_REMOVED`; the row is marked, the
+supplier loses access). A supplier who has already submitted cannot be removed.
 
 ### 1.3 Matching rule
 A supplier is matched when **all** hold:

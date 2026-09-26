@@ -89,6 +89,15 @@ vault PRIVATE key ── wrapped by the Key Management Service (context = vault 
   submission until the deadline by submitting a new version; the server never
   decrypts their earlier version back to them.
 
+### Opening modes (quotation requests)
+
+Encryption at rest is unconditional. Whether content is *sealed* is decided per
+quotation request (`visible`, `sealed_anytime`, `sealed_after_deadline`) and is
+municipal policy, not a technical weakening: in `visible` mode the process team
+(participants with `submission.read_opened`) reads offers as they arrive, each
+read audited; administrators and non-participants still see nothing. Tenders
+are always sealed until the deadline.
+
 ### Opening all together
 
 There is one vault per process. The vault is either `SEALED` or `OPENED`;

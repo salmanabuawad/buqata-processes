@@ -70,7 +70,7 @@ which is the single place a permission is checked.
 | `ProcessService` | Create, edit draft, publish, cancel. Delegates rules to the process definition. |
 | `WorkflowService` | Validated state transitions per process type; derives the timeline. |
 | `CategoryService` | Multilingual category tree stored in the database. |
-| `DistributionService` | Automatic, non-editable supplier matching and the immutable recipient snapshot. |
+| `DistributionService` | Automatic supplier matching, immutable snapshots, and reasoned manual edits where the process type allows them (quotation requests). |
 | `DocumentService` | Upload validation (size, MIME, magic bytes, malware scan hook), SHA-256, storage references. |
 | `SecureVaultService` | Envelope encryption of sealed submissions; releases keys only through an approved opening. |
 | `OpeningService` | Evaluates the `OpeningPolicy`, gathers approvals (M-of-N), opens the vault, raises security events. |

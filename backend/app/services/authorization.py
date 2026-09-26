@@ -58,6 +58,7 @@ def supplier_recipient(db: Session, ctx: AuthContext, process: Process) -> Optio
         select(DistributionRecipient).where(
             DistributionRecipient.process_id == process.id,
             DistributionRecipient.supplier_id == ctx.supplier_id,
+            DistributionRecipient.removed_at.is_(None),
         )
     ).scalar_one_or_none()
 

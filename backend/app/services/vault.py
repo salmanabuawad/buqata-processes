@@ -6,8 +6,10 @@
 
 Sealing needs only the public key. The private key is unwrapped exclusively by
 `open_vault` (called by the opening workflow after the policy passes) and by
-content reads on a vault that is already OPENED. There is no per-submission
-open: a vault is sealed or opened as a whole.
+content reads — on a vault that is already OPENED, or for a process whose
+definition says its content is not sealed (an unsealed quotation request is
+encrypted at rest and readable by its process team as offers arrive). There is
+no per-submission open: a sealed vault is sealed or opened as a whole.
 """
 from __future__ import annotations
 
@@ -235,9 +237,11 @@ def open_vault(db: Session, vault: Vault, submissions: Sequence[Submission], act
     return OpenReport(sum(1 for s in submissions if s.current_version is not None), verified, failed, alerts)
 
 
-def read_payloads(vault: Vault, submissions: Sequence[Submission], actor: Actor) -> dict:
-    """Decrypt current payloads for an OPENED vault. Returns {submission_id: payload or None}."""
-    _require_opened(vault, actor)
+def read_payloads(vault: Vault, submissions: Sequence[Submission], actor: Actor, *, sealed: bool = True) -> dict:
+    """Decrypt current payloads. A sealed process requires an OPENED vault.
+    Returns {submission_id: payload or None}."""
+    if sealed:
+        _require_opened(vault, actor)
     private_key = _unwrap_private_key(vault)
     result = {}
     for submission in submissions:
@@ -253,8 +257,9 @@ def read_payloads(vault: Vault, submissions: Sequence[Submission], actor: Actor)
 
 
 def read_document(db: Session, vault: Vault, submission: Submission, document: SubmissionDocument,
-                  actor: Actor) -> bytes:
-    _require_opened(vault, actor, submission.id)
+                  actor: Actor, *, sealed: bool = True) -> bytes:
+    if sealed:
+        _require_opened(vault, actor, submission.id)
     version = document.version
     if submission.current_version_id != version.id:
         raise Forbidden("superseded_version", "Only the final submitted version is opened")

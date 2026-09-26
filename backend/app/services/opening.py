@@ -22,6 +22,7 @@ from app.engines.opening_policy import (
     PolicyEvaluation,
 )
 from app.models import OpeningApproval, OpeningPolicyRecord, OpeningRequest, Process, Submission, User
+from app.processes.registry import get_definition
 from app.services import audit, authorization, notifications, processes as process_service
 from app.services import vault as vault_service
 from app.services.identity import AuthContext
@@ -92,6 +93,9 @@ def status(db: Session, ctx: AuthContext, process: Process) -> dict:
         "vault_status": vault_row.status if vault_row else None,
         "opened_at": vault_row.opened_at.isoformat() if vault_row and vault_row.opened_at else None,
         "sealed_count": len(process_service.submitted(db, process)),
+        "content_sealed": get_definition(process.process_type).content_sealed(process),
+        "opening_mode": (process.details or {}).get("opening_mode"),
+        "submission_deadline": process.submission_deadline.isoformat(),
         "opening_time": process.opening_at.isoformat(),
         "phase": process_service.phase(process),
         "rules": record.rules,
@@ -120,6 +124,8 @@ def request_opening(db: Session, ctx: AuthContext, process: Process) -> dict:
     authorization.require(ctx, "opening.initiate")
     if process.status != "PUBLISHED":
         raise Conflict("invalid_transition", "Only a published process can be opened")
+    if not get_definition(process.process_type).content_sealed(process):
+        raise Conflict("not_sealed", "Offers in this process are not sealed; there is nothing to open")
     if pending_request(db, process) is not None:
         raise Conflict("opening_already_requested", "An opening request is already pending")
     record = policy_record(db, process)

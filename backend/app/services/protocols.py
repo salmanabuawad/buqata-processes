@@ -57,6 +57,7 @@ LABELS = {
         "chain": "אימות שרשרת", "chain_ok": "תקין", "chain_broken": "נמצאה פגיעה בשרשרת",
         "sign_1": "מנהל/ת רכש", "sign_2": "גזבר/ית", "sign_3": "מורשה חתימה",
         "days": "ימים", "months": "חודשים",
+        "unsealed_note": "הבקשה לא נחתמה: ההצעות היו גלויות לצוות ההליך עם הגשתן, וכל צפייה נרשמה ביומן.", "early_note": "הכספת נפתחה לפני המועד האחרון; הפתיחה סגרה את ההגשה.", "manual_changes": "שינויים ידניים ברשימת התפוצה", "added": "נוסף", "removed": "הוסר", "no_manual_changes": "לא בוצעו שינויים ידניים.", 
         "footer": "מסמך זה הופק אוטומטית ממערכת ההליכים הדיגיטליים של המועצה. טביעת המסמך נשמרת ביומן הביקורת.",
     },
     "ar": {
@@ -81,6 +82,7 @@ LABELS = {
         "chain": "التحقق من السلسلة", "chain_ok": "سليمة", "chain_broken": "تم اكتشاف خلل في السلسلة",
         "sign_1": "مدير المشتريات", "sign_2": "أمين الصندوق", "sign_3": "صاحب حق التوقيع",
         "days": "أيام", "months": "أشهر",
+        "unsealed_note": "لم يُختم الطلب: كانت العروض ظاهرة لفريق الإجراء عند تقديمها، وسُجّل كل اطلاع في السجل.", "early_note": "فُتحت الخزنة قبل الموعد الأخير؛ وأغلق الفتح باب التقديم.", "manual_changes": "تغييرات يدوية على قائمة التوزيع", "added": "أُضيف", "removed": "أُزيل", "no_manual_changes": "لم تُجرَ تغييرات يدوية.", 
         "footer": "أُنتج هذا المستند تلقائياً من نظام الإجراءات الرقمية للمجلس. بصمة المستند محفوظة في سجل التدقيق.",
     },
     "en": {
@@ -105,6 +107,7 @@ LABELS = {
         "chain": "Chain verification", "chain_ok": "Valid", "chain_broken": "Chain damage detected",
         "sign_1": "Procurement manager", "sign_2": "Treasurer", "sign_3": "Authorized signatory",
         "days": "days", "months": "months",
+        "unsealed_note": "This request was not sealed: offers were visible to the process team as they arrived, and every view was logged.", "early_note": "The vault was opened before the deadline; opening closed submissions.", "manual_changes": "Manual changes to the distribution list", "added": "Added", "removed": "Removed", "no_manual_changes": "No manual changes were made.", 
         "footer": "Generated automatically by the council's digital process platform. The document fingerprint is kept in the audit trail.",
     },
 }
@@ -120,14 +123,15 @@ def generate(db: Session, ctx: AuthContext, process: Process, locale: str = "he"
     authorization.require_scope(db, ctx, process, "protocol.generate")
     if locale not in LABELS:
         raise Invalid("invalid_locale", "Unsupported locale")
-    if process.status not in ("OPENED", "DECIDED", "CLOSED"):
+    if process.status in ("DRAFT", "CANCELLED") or not process_service.content_readable(db, process):
         raise Conflict("protocol_not_available", "A protocol can be generated after opening")
     t = LABELS[locale]
     definition = get_definition(process.process_type)
     version = db.get(ProcessVersion, process.current_version_id) if process.current_version_id else None
     vault_row = process_service.vault_of(db, process)
     submissions = process_service.submitted(db, process)
-    payloads = vault_service.read_payloads(vault_row, submissions, ctx.actor())
+    sealed = definition.content_sealed(process)
+    payloads = vault_service.read_payloads(vault_row, submissions, ctx.actor(), sealed=sealed)
 
     rows: List[dict] = []
     for s in submissions:
@@ -190,7 +194,9 @@ def generate(db: Session, ctx: AuthContext, process: Process, locale: str = "he"
                       "failed": email_status.get("FAILED", 0) + email_status.get("DEAD", 0),
                       "opened": opened_invites,
                       "snapshots": [{"kind": s.kind, "hash": s.snapshot_hash, "count": s.recipient_count} for s in snapshots]},
+        sealed=sealed, distribution_changes=_distribution_changes(db, process, locale),
         submissions=submissions, opened_at=format_datetime(vault_row.opened_at if vault_row else None),
+        opened_early=bool(vault_row and vault_row.opened_at and vault_row.opened_at < process.submission_deadline),
         approvals=approvals, rows=rows, decision=decision_view,
         audit_count=db.execute(select(func.count(AuditEvent.id)).where(AuditEvent.process_id == process.id)).scalar_one(),
         audit_head=chain.head_hash, chain_valid=chain.valid,
@@ -205,6 +211,22 @@ def generate(db: Session, ctx: AuthContext, process: Process, locale: str = "he"
                  metadata={"protocol_id": protocol.id, "type": protocol.protocol_type, "locale": locale,
                            "content_hash": protocol.content_hash, "audit_head_hash": chain.head_hash})
     return protocol
+
+
+def _distribution_changes(db: Session, process: Process, locale: str) -> List[dict]:
+    from app.models import Supplier
+
+    changes = []
+    for r in db.execute(select(DistributionRecipient).where(DistributionRecipient.process_id == process.id)).scalars():
+        supplier = db.get(Supplier, r.supplier_id)
+        manual = (r.match_reason or {}).get("manual")
+        if manual:
+            changes.append({"kind": "added", "supplier": supplier.company_name, "reason": manual.get("reason", ""),
+                            "at": format_datetime(r.notified_at)})
+        if r.removed_at:
+            changes.append({"kind": "removed", "supplier": supplier.company_name, "reason": r.removal_reason or "",
+                            "at": format_datetime(r.removed_at)})
+    return changes
 
 
 def list_for(db: Session, ctx: AuthContext, process: Process) -> List[Protocol]:

@@ -32,7 +32,8 @@ from app.services.suppliers import default_organization
 
 TRANSITIONS: Dict[str, set] = {
     "DRAFT": {"PUBLISHED", "CANCELLED"},
-    "PUBLISHED": {"OPENED", "CANCELLED"},
+    # PUBLISHED → DECIDED only for unsealed processes (guarded in evaluation).
+    "PUBLISHED": {"OPENED", "DECIDED", "CANCELLED"},
     "OPENED": {"DECIDED"},
     "DECIDED": {"CLOSED"},
     "CLOSED": set(),
@@ -51,7 +52,10 @@ def transition(process: Process, target: str) -> None:
 def phase(process: Process, now: Optional[datetime] = None) -> str:
     now = now or clock.now()
     if process.status == "PUBLISHED":
-        return "submission_open" if now < process.submission_deadline else "awaiting_opening"
+        if now < process.submission_deadline:
+            return "submission_open"
+        sealed = get_definition(process.process_type).content_sealed(process)
+        return "awaiting_opening" if sealed else "evaluation"
     return {
         "DRAFT": "draft", "OPENED": "evaluation", "DECIDED": "decided", "CLOSED": "closed", "CANCELLED": "cancelled",
     }[process.status]
@@ -103,7 +107,7 @@ def create(db: Session, ctx: AuthContext, data: dict) -> Process:
     db.flush()
     for c in cats:
         db.add(ProcessCategory(process_id=process.id, category_id=c.id))
-    db.add(OpeningPolicyRecord(process_id=process.id, rules=list(definition.default_opening_rules),
+    db.add(OpeningPolicyRecord(process_id=process.id, rules=definition.opening_rules_for(details),
                                required_approvals=definition.default_required_approvals,
                                designated_official_ids=[], frozen=False))
     db.add(ProcessParticipant(process_id=process.id, user_id=ctx.user_id, participation="OWNER",
@@ -127,6 +131,8 @@ def update(db: Session, ctx: AuthContext, process: Process, data: dict) -> Proce
             changed.append(key)
     if data.get("details") is not None:
         process.details = definition.validate_details(data["details"])
+        policy = db.execute(select(OpeningPolicyRecord).where(OpeningPolicyRecord.process_id == process.id)).scalar_one()
+        policy.rules = definition.opening_rules_for(process.details)
         changed.append("details")
     if data.get("submission_deadline") is not None or "opening_time" in data:
         deadline = data.get("submission_deadline") or process.submission_deadline
@@ -181,7 +187,8 @@ def snapshot_of(db: Session, process: Process) -> dict:
     }
 
 
-def publish(db: Session, ctx: AuthContext, process: Process) -> dict:
+def publish(db: Session, ctx: AuthContext, process: Process, *, excluded_supplier_ids=(),
+            additional_supplier_ids=(), change_reason: str = "") -> dict:
     authorization.require_scope(db, ctx, process, "process.manage", authorization.MANAGE_PARTICIPATIONS)
     definition = get_definition(process.process_type)
     if process.status != "DRAFT":
@@ -216,7 +223,8 @@ def publish(db: Session, ctx: AuthContext, process: Process) -> dict:
                      metadata={"vault_id": vault_row.id, "kms_provider": vault_row.kms_provider})
     snap = None
     if definition.distribution == "category_match":
-        snap = distribution.create_initial_distribution(db, process, ctx.actor())
+        snap = distribution.create_initial_distribution(
+            db, process, ctx.actor(), excluded_supplier_ids, additional_supplier_ids, change_reason)
     return {
         "version": {"version_no": 1, "content_hash": content_hash},
         "distribution": {"snapshot_id": str(snap.id), "recipient_count": snap.recipient_count,
@@ -234,6 +242,16 @@ def cancel(db: Session, ctx: AuthContext, process: Process, reason: str) -> None
     audit.record(db, "PROCESS_CANCELLED", ctx.actor(), process_id=process.id, metadata={"reason": reason.strip()})
 
 
+def content_readable(db: Session, process: Process) -> bool:
+    """Whether offer content can be shown (to authorized participants) now."""
+    if process.status == "DRAFT":
+        return False
+    if not get_definition(process.process_type).content_sealed(process):
+        return True
+    vault_row = vault_of(db, process)
+    return vault_row is not None and vault_row.status == "OPENED"
+
+
 def vault_of(db: Session, process: Process) -> Optional[Vault]:
     return db.execute(select(Vault).where(Vault.process_id == process.id)).scalar_one_or_none()
 
@@ -247,7 +265,7 @@ def submitted(db: Session, process: Process) -> List[Submission]:
 
 def counts(db: Session, process: Process) -> dict:
     recipients = db.execute(select(func.count(DistributionRecipient.id)).where(
-        DistributionRecipient.process_id == process.id)).scalar_one()
+        DistributionRecipient.process_id == process.id, DistributionRecipient.removed_at.is_(None))).scalar_one()
     submissions = db.execute(select(func.count(Submission.id)).where(
         Submission.process_id == process.id, Submission.current_version_id.is_not(None))).scalar_one()
     return {"recipients": recipients, "submissions": submissions}
@@ -263,16 +281,20 @@ def timeline(db: Session, process: Process) -> List[dict]:
         DistributionSnapshot.process_id == process.id, DistributionSnapshot.kind == "INITIAL")).scalar_one_or_none()
     published = process.published_at is not None
     deadline_passed = published and now >= process.submission_deadline
+    # Opening early (sealed) or deciding early (unsealed) closes submissions.
+    submissions_closed = deadline_passed or process.status in ("OPENED", "DECIDED", "CLOSED")
     opened = vault_row is not None and vault_row.status == "OPENED"
+    sealed = definition.content_sealed(process)
+    evaluating = opened if sealed else (published and process.status != "CANCELLED")
     stage_state = {
         "draft": ("done", process.created_at),
         "published": ("done" if published else "pending", process.published_at),
         "notified": ("done" if first_snapshot else "pending", first_snapshot.created_at if first_snapshot else None),
-        "submission": ("done" if deadline_passed else ("current" if published else "pending"), None),
+        "submission": ("done" if submissions_closed else ("current" if published else "pending"), None),
         "deadline": ("done" if deadline_passed else "pending", process.submission_deadline),
         "opening": ("done" if opened else ("current" if deadline_passed else "pending"),
                     vault_row.opened_at if vault_row else None),
-        "evaluation": ("done" if decision else ("current" if opened else "pending"), None),
+        "evaluation": ("done" if decision else ("current" if evaluating else "pending"), None),
         "decision": ("done" if decision else "pending", decision.decided_at if decision else None),
         "closed": ("done" if process.status == "CLOSED" else ("current" if decision else "pending"),
                    process.closed_at),
@@ -280,7 +302,7 @@ def timeline(db: Session, process: Process) -> List[dict]:
     if process.status == "DRAFT":
         stage_state["draft"] = ("current", process.created_at)
     result = []
-    for key in definition.timeline:
+    for key in definition.timeline_for(process):
         state, at = stage_state.get(key, ("pending", None))
         result.append({"key": key, "state": state, "at": at.isoformat() if at else None})
     if process.status == "CANCELLED":

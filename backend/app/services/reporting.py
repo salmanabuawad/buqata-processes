@@ -27,12 +27,14 @@ from app.models import (
     SupplierDocument,
     User,
 )
+from app.processes.registry import get_definition
 from app.services import authorization, distribution as distribution_service, processes as process_service
 from app.services.identity import AuthContext
 
 
 def fairness(db: Session, ctx: AuthContext, process: Process, locale: str = "he") -> dict:
     authorization.require(ctx, "process.monitor")
+    definition = get_definition(process.process_type)
     recipients = distribution_service.recipients(db, process.id)
     snapshots = db.execute(select(DistributionSnapshot).where(DistributionSnapshot.process_id == process.id)
                            .order_by(DistributionSnapshot.created_at)).scalars().all()
@@ -44,31 +46,38 @@ def fairness(db: Session, ctx: AuthContext, process: Process, locale: str = "he"
                 NotificationDelivery.channel == "EMAIL")).scalars():
             deliveries[d.notification_id] = d
     submitted_suppliers = {s.supplier_id for s in process_service.submitted(db, process)}
-    vault_row = process_service.vault_of(db, process)
-    revealed = vault_row is None or vault_row.status == "OPENED"
+    # Who submitted is withheld while offers are sealed.
+    revealed = process_service.content_readable(db, process)
 
     category_ids = sorted({m["process_category_id"] for r in recipients for m in r.match_reason.get("matches", [])}
                           | {m["supplier_category_id"] for r in recipients for m in r.match_reason.get("matches", [])})
     names = distribution_service.category_names(db, category_ids, locale)
+    remover_names = {u.id: u.full_name for u in db.execute(select(User).where(
+        User.id.in_([r.removed_by for r in recipients if r.removed_by]))).scalars()}
 
+    active = [r for r in recipients if r.active]
+    stats = {"eligible": len(active), "notifications": 0, "delivered": 0, "failed": 0, "pending": 0,
+             "opened": 0, "started": 0, "submitted": len(submitted_suppliers),
+             "manually_added": sum(1 for r in active if (r.match_reason or {}).get("manual")),
+             "manually_removed": len(recipients) - len(active)}
     rows = []
-    stats = {"eligible": len(recipients), "notifications": 0, "delivered": 0, "failed": 0, "pending": 0,
-             "opened": 0, "started": 0, "submitted": len(submitted_suppliers)}
     for r in recipients:
         delivery = deliveries.get(r.notification_id)
         status = delivery.status if delivery else ("NO_EMAIL" if r.notification_id else "NONE")
-        if r.notification_id:
-            stats["notifications"] += 1
-        if status == "SENT":
-            stats["delivered"] += 1
-        elif status in ("FAILED", "DEAD"):
-            stats["failed"] += 1
-        elif status == "PENDING":
-            stats["pending"] += 1
-        if r.opened_at:
-            stats["opened"] += 1
-        if r.submission_started_at:
-            stats["started"] += 1
+        if r.active:
+            if r.notification_id:
+                stats["notifications"] += 1
+            if status == "SENT":
+                stats["delivered"] += 1
+            elif status in ("FAILED", "DEAD"):
+                stats["failed"] += 1
+            elif status == "PENDING":
+                stats["pending"] += 1
+            if r.opened_at:
+                stats["opened"] += 1
+            if r.submission_started_at:
+                stats["started"] += 1
+        manual = (r.match_reason or {}).get("manual")
         rows.append({
             "supplier_id": str(r.supplier_id),
             "supplier_name": r.supplier.company_name,
@@ -79,12 +88,16 @@ def fairness(db: Session, ctx: AuthContext, process: Process, locale: str = "he"
                  "process_category": names.get(m["process_category_id"])}
                 for m in r.match_reason.get("matches", [])
             ],
+            "manual_reason": manual.get("reason") if manual else None,
             "notified_at": r.notified_at.isoformat(),
             "delivery_status": status,
             "opened_at": r.opened_at.isoformat() if r.opened_at else None,
             "started": r.submission_started_at is not None,
-            # Who submitted is withheld until the vault is opened.
             "submitted": (r.supplier_id in submitted_suppliers) if revealed else None,
+            "removed": not r.active,
+            "removed_at": r.removed_at.isoformat() if r.removed_at else None,
+            "removed_by": remover_names.get(r.removed_by) if r.removed_by else None,
+            "removal_reason": r.removal_reason,
         })
     return {
         "process_id": str(process.id),
@@ -95,7 +108,10 @@ def fairness(db: Session, ctx: AuthContext, process: Process, locale: str = "he"
                        "recipient_count": s.recipient_count, "snapshot_hash": s.snapshot_hash, "rule": s.rule}
                       for s in snapshots],
         "recipients": rows,
-        "manual_changes_possible": False,
+        "excluded_at_publication": [x for s in snapshots for x in (s.rule or {}).get("manual_exclusions", [])],
+        "manual_changes_possible": definition.distribution_editable,
+        "editable_now": definition.distribution_editable and process.status == "PUBLISHED"
+        and clock.now() < process.submission_deadline,
     }
 
 
@@ -132,7 +148,7 @@ def staff_dashboard(db: Session, ctx: AuthContext) -> dict:
     for p in published[-12:]:
         c = process_service.counts(db, p)
         participation.append({"reference": p.reference_number, "invited": c["recipients"],
-                              "submitted": c["submissions"] if p.status != "PUBLISHED" else None})
+                              "submitted": c["submissions"] if process_service.content_readable(db, p) else None})
     reached = [x["invited"] for x in participation]
     received = [x["submitted"] for x in participation if x["submitted"] is not None]
 
@@ -184,7 +200,7 @@ def supplier_opportunities(db: Session, ctx: AuthContext) -> List[dict]:
         return []
     rows = db.execute(
         select(DistributionRecipient, Process).join(Process, Process.id == DistributionRecipient.process_id)
-        .where(DistributionRecipient.supplier_id == ctx.supplier_id)
+        .where(DistributionRecipient.supplier_id == ctx.supplier_id, DistributionRecipient.removed_at.is_(None))
         .order_by(Process.submission_deadline.desc())
     ).all()
     subs = {s.process_id: s for s in db.execute(select(Submission).where(

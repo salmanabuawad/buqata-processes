@@ -135,12 +135,12 @@ def _supplier_user(db: Session, slug: str) -> User:
 
 
 def _publish_rfq(db, owner, *, title, description, category_keys, quantity, unit, spec, created, published,
-                 deadline, delivery_days=30, reference=None) -> Process:
+                 deadline, delivery_days=30, reference=None, opening_mode="sealed_after_deadline") -> Process:
     with clock.frozen_at(created):
         process = processes.create(db, _ctx(db, owner), {
             "process_type": "rfq", "reference_number": reference, "title": title, "description": description,
             "category_ids": [_cat(db, k).id for k in category_keys], "submission_deadline": deadline,
-            "details": {"quantity": quantity, "unit": unit, "technical_specification": spec,
+            "details": {"quantity": quantity, "unit": unit, "technical_specification": spec, "opening_mode": opening_mode,
                         "expected_delivery_date": (deadline + timedelta(days=delivery_days)).date().isoformat(),
                         "additional_requirements": "יש לצרף אישור ניהול ספרים בתוקף ואישור ניכוי מס במקור."},
             "contact_name": owner.full_name, "contact_email": owner.email, "contact_phone": "04-6982000",
@@ -303,7 +303,7 @@ def seed_demo(db: Session) -> dict:
                            category_keys=["it.computers.laptop"], quantity=35, unit="יח'",
                            spec="מסך 14 אינץ', 8GB RAM, SSD 256GB, סוללה 8 שעות לפחות, מקלדת תלת-לשונית.",
                            created=now - timedelta(days=4), published=now - timedelta(days=3),
-                           deadline=now + timedelta(days=6))
+                           deadline=now + timedelta(days=6), opening_mode="visible")
     _engage(db, laptops, opened=5, started=3, rng=rng, window_start=now - timedelta(days=3),
             window_end=now - timedelta(hours=1),
             offers=[(98_000, 30, 24, "שוטף + 60"), (104_500, 21, 36, "שוטף + 30")])
@@ -314,7 +314,7 @@ def seed_demo(db: Session) -> dict:
                       category_keys=["maintenance.ac"], quantity=46, unit="יחידות מיזוג",
                       spec="שני טיפולים מונעים בשנה לכל יחידה, זמן תגובה לתקלה עד 24 שעות, כולל חלקי חילוף עד 500 ₪.",
                       created=now - timedelta(days=2), published=now - timedelta(days=1),
-                      deadline=now + timedelta(days=10))
+                      deadline=now + timedelta(days=10), opening_mode="sealed_anytime")
     _engage(db, ac, opened=1, started=0, rng=rng, window_start=now - timedelta(days=1),
             window_end=now - timedelta(hours=1), offers=[])
 

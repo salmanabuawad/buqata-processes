@@ -144,8 +144,16 @@ class DistributionRecipient(Base):
     notified_at: Mapped[datetime] = created_at_column()
     opened_at: Mapped[Optional[datetime]] = mapped_column(UTCDateTime)
     submission_started_at: Mapped[Optional[datetime]] = mapped_column(UTCDateTime)
+    # Manual removal (quotation requests only): the row stays, marked removed.
+    removed_at: Mapped[Optional[datetime]] = mapped_column(UTCDateTime)
+    removed_by: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("users.id"))
+    removal_reason: Mapped[Optional[str]] = mapped_column(Text)
 
     supplier: Mapped[Supplier] = relationship()
+
+    @property
+    def active(self) -> bool:
+        return self.removed_at is None
 
 
 class Vault(Base):

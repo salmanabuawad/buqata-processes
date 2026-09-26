@@ -186,18 +186,20 @@ def world(db):
     return {"staff": staff, "suppliers": sup}
 
 
-def create_rfq(client: ApiClient, db, category_key="it.computers.desktop", deadline=None, publish=True):
+def create_rfq(client: ApiClient, db, category_key="it.computers.desktop", deadline=None, publish=True,
+               opening_mode="sealed_after_deadline", publish_body=None):
     deadline = deadline or (clock.now() + timedelta(days=3))
     response = client.post("/api/v1/processes", json={
         "process_type": "rfq", "title": "רכישת 20 מחשבים נייחים", "description": "desktops",
         "category_ids": [str(cat(db, category_key).id)], "submission_deadline": deadline.isoformat(),
-        "details": {"quantity": 20, "unit": "יח'", "technical_specification": "i5, 16GB"},
+        "details": {"quantity": 20, "unit": "יח'", "technical_specification": "i5, 16GB",
+                    "opening_mode": opening_mode},
         "contact_email": "proc@example.com",
     })
     assert response.status_code == 200, response.text
     process = response.json()
     if publish:
-        response = client.post(f"/api/v1/processes/{process['id']}/publish", json={})
+        response = client.post(f"/api/v1/processes/{process['id']}/publish", json=publish_body or {})
         assert response.status_code == 200, response.text
         process = response.json()
     return process

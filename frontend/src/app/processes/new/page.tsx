@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Award, FileSearch, Gavel, HandCoins, Megaphone, UsersRound } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { CategoryPicker } from "@/components/CategoryPicker";
+import { AddSupplierModal, OpeningModePicker, type OpeningMode } from "@/components/RfqControls";
 import { Alert, Badge, Button, Card, CardHeader, cx, ErrorAlert, Field, Input, PageHeader, Textarea } from "@/components/ui";
 import { useI18n } from "@/i18n/I18nProvider";
 import { api } from "@/lib/api";
@@ -64,6 +65,14 @@ function RFQForm() {
   const [busy, setBusy] = useState<"" | "draft" | "publish">("");
   const [error, setError] = useState<unknown>(null);
   const [confirm, setConfirm] = useState(false);
+  const [openingMode, setOpeningMode] = useState<OpeningMode>("visible");
+  // Manual changes to the computed list (quotation requests only), with one shared reason.
+  const [excluded, setExcluded] = useState<string[]>([]);
+  const [added, setAdded] = useState<{ id: string; name: string }[]>([]);
+  const [changeReason, setChangeReason] = useState("");
+  const [addOpen, setAddOpen] = useState(false);
+  const hasChanges = excluded.length > 0 || added.length > 0;
+  const recipientCount = (preview?.count ?? 0) - excluded.length + added.length;
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setForm({ ...form, [k]: e.target.value });
 
   useEffect(() => {
@@ -84,6 +93,7 @@ function RFQForm() {
         details: {
           quantity: Number(form.quantity), unit: form.unit, technical_specification: form.technical_specification,
           additional_requirements: form.additional_requirements, expected_delivery_date: form.expected_delivery_date || null,
+          opening_mode: openingMode,
         },
         contact_name: form.contact_name, contact_email: form.contact_email, contact_phone: form.contact_phone,
       });
@@ -94,7 +104,11 @@ function RFQForm() {
         fd.append("title", file.name);
         await api.form(`/processes/${created.id}/documents`, fd);
       }
-      if (publish) await api.post(`/processes/${created.id}/publish`, {});
+      if (publish) {
+        await api.post(`/processes/${created.id}/publish`, hasChanges ? {
+          excluded_supplier_ids: excluded, additional_supplier_ids: added.map((a) => a.id), change_reason: changeReason,
+        } : {});
+      }
       window.location.href = `/process/?id=${created.id}`;
     } catch (err) {
       setError(err);
@@ -135,6 +149,10 @@ function RFQForm() {
             <Field label={t("rfq.contact_phone")}>{(id) => <Input id={id} type="tel" dir="ltr" value={form.contact_phone} onChange={set("contact_phone")} />}</Field>
           </div>
         </Card>
+        <Card>
+          <CardHeader title={t("opening_mode.title")} subtitle={t("opening_mode.subtitle")} />
+          <div className="p-5"><OpeningModePicker value={openingMode} onChange={setOpeningMode} /></div>
+        </Card>
       </div>
 
       <div className="space-y-6 xl:sticky xl:top-22 xl:self-start">
@@ -145,32 +163,52 @@ function RFQForm() {
         <Card className="border-primary/30">
           <div className="p-5">
             <div className="text-sm text-muted">{t("new.matching_title")}</div>
-            <div className="mt-1 text-4xl font-bold text-primary">{preview ? preview.count : "—"}</div>
+            <div className="mt-1 text-4xl font-bold text-primary">{preview ? recipientCount : "—"}</div>
             <div className="mt-1 text-sm text-ink-2">{preview ? t("new.matching_sentence", { count: preview.count }) : t("new.matching_empty")}</div>
-            <Alert tone="success">{t("new.fairness_rule")}</Alert>
-            {preview && preview.count > 0 && (
+            <div className="mt-3"><Alert tone="primary">{t("new.editable_rule")}</Alert></div>
+            {preview && (
               <div className="mt-3">
                 <button className="text-sm text-primary underline" onClick={() => setShowList((v) => !v)}>{showList ? t("new.hide_list") : t("new.show_list")}</button>
                 {showList && (
-                  <ul className="mt-2 max-h-60 divide-y divide-line overflow-y-auto rounded-lg border border-line text-sm">
-                    {preview.suppliers.map((s) => (
-                      <li key={s.id} className="flex items-center justify-between gap-2 px-3 py-2">
-                        <span>{s.company_name}<span className="block text-xs text-muted">{s.city}</span></span>
-                        <span className="text-xs text-muted">{s.relations.map((r) => t(`match.${r}`)).join(", ")}</span>
+                  <ul className="mt-2 max-h-72 divide-y divide-line overflow-y-auto rounded-lg border border-line text-sm">
+                    {preview.suppliers.map((s) => {
+                      const out = excluded.includes(s.id);
+                      return (
+                        <li key={s.id} className="flex items-center justify-between gap-2 px-3 py-2">
+                          <label className="flex items-center gap-2">
+                            <input type="checkbox" className="size-4 accent-[var(--primary)]" checked={!out}
+                              onChange={() => setExcluded(out ? excluded.filter((x) => x !== s.id) : [...excluded, s.id])} />
+                            <span className={out ? "text-muted line-through" : ""}>{s.company_name}<span className="block text-xs text-muted">{s.city}</span></span>
+                          </label>
+                          <span className="text-xs text-muted">{s.relations.map((r) => t(`match.${r}`)).join(", ")}</span>
+                        </li>
+                      );
+                    })}
+                    {added.map((a) => (
+                      <li key={a.id} className="flex items-center justify-between gap-2 bg-accent-soft/60 px-3 py-2">
+                        <span>{a.name}<span className="block text-xs text-accent">{t("distribution_edit.added_manually")}</span></span>
+                        <button className="text-xs text-danger hover:underline" onClick={() => setAdded(added.filter((x) => x.id !== a.id))}>{t("distribution_edit.undo")}</button>
                       </li>
                     ))}
                   </ul>
                 )}
-                <p className="mt-2 text-xs text-muted">{t("new.list_read_only")}</p>
+                <Button variant="secondary" size="sm" className="mt-2" onClick={() => setAddOpen(true)}>{t("distribution_edit.add")}</Button>
+                {hasChanges && (
+                  <div className="mt-3">
+                    <Field label={t("distribution_edit.reason")} hint={t("distribution_edit.reason_hint")} required>
+                      {(id) => <Input id={id} value={changeReason} onChange={(e) => setChangeReason(e.target.value)} />}
+                    </Field>
+                  </div>
+                )}
               </div>
             )}
           </div>
           <div className="flex flex-col gap-2 border-t border-line p-4">
             {!confirm ? (
-              <Button onClick={() => setConfirm(true)} disabled={!form.title || !categories.length || !!busy}>{t("new.publish")}</Button>
+              <Button onClick={() => setConfirm(true)} disabled={!form.title || !categories.length || !!busy || (hasChanges && changeReason.trim().length < 5)}>{t("new.publish")}</Button>
             ) : (
               <div className="space-y-2 rounded-lg bg-primary-soft p-3">
-                <p className="text-sm">{t("new.publish_confirm", { count: preview?.count ?? 0 })}</p>
+                <p className="text-sm">{t("new.publish_confirm", { count: recipientCount })}</p>
                 <div className="flex gap-2">
                   <Button onClick={() => save(true)} busy={busy === "publish"}>{t("new.publish_now")}</Button>
                   <Button variant="ghost" onClick={() => setConfirm(false)}>{t("common.cancel")}</Button>
@@ -181,6 +219,14 @@ function RFQForm() {
           </div>
         </Card>
       </div>
+      <AddSupplierModal open={addOpen} onClose={() => setAddOpen(false)}
+        excludeIds={[...(preview?.suppliers.map((x) => x.id) ?? []), ...added.map((a) => a.id)]}
+        onConfirm={(id, name, reason) => {
+          setAdded([...added, { id, name }]);
+          if (!changeReason) setChangeReason(reason);
+          setAddOpen(false);
+          setShowList(true);
+        }} />
     </div>
   );
 }

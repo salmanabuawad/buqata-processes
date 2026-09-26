@@ -16,7 +16,7 @@ Four principles run through every screen and every rule:
 * **Supplier registry** — self-registration, multilingual category tree stored
   in the database, certificates with expiry, profile and category changes.
 * **Request for quotation, end to end** — create → live "N suppliers match"
-  preview → publish → **automatic, non-editable distribution** to every
+  preview → publish → **automatic distribution** (editable with a recorded reason) to every
   matching active supplier (immutable, hashed snapshot; late registrants get a
   supplemental snapshot) → e-mail + in-app invitations → sealed submission with
   receipt → deadline → **opening of all offers together** under an opening

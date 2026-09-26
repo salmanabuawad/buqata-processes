@@ -30,6 +30,12 @@ class ProcessDefinition:
     create_permission: ClassVar[str]
     submitter_kind: ClassVar[str]              # supplier | applicant
     distribution: ClassVar[str]                # category_match | public
+    # Staff may add/remove recipients (with a recorded reason). Municipal
+    # policy: allowed for quotation requests, never for formal tenders.
+    distribution_editable: ClassVar[bool] = False
+    # Submissions are always encrypted at rest (the vault). `sealed` says the
+    # type supports sealing content until an opening; `content_sealed()` says
+    # whether this particular process uses it.
     sealed: ClassVar[bool]
     details_model: ClassVar[Type[StrictModel]]
     submission_model: ClassVar[Optional[Type[StrictModel]]] = None
@@ -40,6 +46,19 @@ class ProcessDefinition:
     protocol_types: ClassVar[List[str]] = []
 
     # ---- hooks -------------------------------------------------------------
+    def content_sealed(self, process) -> bool:
+        """True when offer content stays unreadable until the vault is opened."""
+        return self.sealed
+
+    def opening_rules_for(self, details: dict) -> List[dict]:
+        """The opening policy a new process starts with (tunable until publication)."""
+        return list(self.default_opening_rules)
+
+    def timeline_for(self, process) -> List[str]:
+        if self.content_sealed(process):
+            return list(self.timeline)
+        return [stage for stage in self.timeline if stage != "opening"]
+
     def validate_details(self, details: dict) -> dict:
         return self.details_model.model_validate(details).model_dump(mode="json")
 

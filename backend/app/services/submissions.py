@@ -101,12 +101,14 @@ def submit(db: Session, ctx: AuthContext, process: Process, payload: dict,
                  metadata={"version_no": version_no, "payload_hash": sealed.payload_hash})
     for kind, filename, size, digest in sealed.files:
         audit.record(db, "FILE_UPLOADED", actor, process_id=process.id, submission_id=submission.id,
-                     metadata={"kind": kind, "size": size, "sha256": digest, "sealed": True})
+                     metadata={"kind": kind, "size": size, "sha256": digest,
+                               "sealed": definition.content_sealed(process)})
     audit.record(db, "SUBMISSION_SEALED", actor, process_id=process.id, submission_id=submission.id,
                  metadata={"version_no": version_no, "receipt_hash": sealed.receipt_hash,
                            "file_count": len(sealed.files)})
+    template = "SUBMISSION_RECEIPT" if definition.content_sealed(process) else "SUBMISSION_RECEIPT_OPEN"
     notifications.enqueue(
-        db, "SUBMISSION_RECEIPT", [notifications.recipient_for_user(ctx.user)],
+        db, template, [notifications.recipient_for_user(ctx.user)],
         {"reference": process.reference_number, "receipt": submission.receipt_number,
          "submitted_at": notifications.format_datetime(submission.submitted_at),
          "receipt_hash": sealed.receipt_hash},

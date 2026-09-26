@@ -15,7 +15,7 @@ interface ProcessView {
   submission_deadline: string; categories: { id: string; path: string }[]; contact: { name: string; email: string; phone: string };
   documents: { id: string; title: string; size_bytes: number }[];
   document_requirements: { kind: string; required: boolean; extensions: string[]; multiple: boolean; names: Record<string, string> }[];
-  server_time: string;
+  server_time: string; content_sealed: boolean; opening_mode: string | null;
 }
 
 interface Receipt {
@@ -24,7 +24,7 @@ interface Receipt {
   superseded_versions: { version_no: number; submitted_at: string; receipt_hash: string }[];
 }
 
-function ReceiptCard({ r, reference }: { r: Receipt; reference: string }) {
+function ReceiptCard({ r, reference, sealed }: { r: Receipt; reference: string; sealed: boolean }) {
   const { t, locale } = useI18n();
   if (!r.current_version) return null;
   return (
@@ -47,7 +47,9 @@ function ReceiptCard({ r, reference }: { r: Receipt; reference: string }) {
             </li>
           ))}
         </ul>
-        <Alert tone="sealed" title={t("submit.sealed_title")}>{t("submit.sealed_body")}</Alert>
+        {sealed
+          ? <Alert tone="sealed" title={t("submit.sealed_title")}>{t("submit.sealed_body")}</Alert>
+          : <Alert tone="primary" title={t("submit.visible_title")}>{t("submit.visible_body")}</Alert>}
       </div>
     </Card>
   );
@@ -116,7 +118,7 @@ export default function OpportunityPage() {
       <div className="grid gap-6 xl:grid-cols-[1.3fr_1fr]">
         <div className="space-y-6">
           {error ? <ErrorAlert error={error} /> : null}
-          {receipt && hasSubmitted && <ReceiptCard r={receipt} reference={p.reference_number} />}
+          {receipt && hasSubmitted && <ReceiptCard r={receipt} reference={p.reference_number} sealed={p.content_sealed} />}
           {hasSubmitted && open && !editing && (
             <Card className="flex flex-wrap items-center justify-between gap-3 p-5">
               <p className="text-sm text-ink-2">{t("submit.replace_hint")}</p>
@@ -157,10 +159,12 @@ export default function OpportunityPage() {
                     </div>
                   ))}
                 </div>
-                <Alert tone="sealed" title={t("submit.seal_note_title")}>{t("submit.seal_note_body")}</Alert>
+                {p.content_sealed
+                  ? <Alert tone="sealed" title={t("submit.seal_note_title")}>{t(p.opening_mode === "sealed_anytime" ? "submit.seal_note_anytime" : "submit.seal_note_body")}</Alert>
+                  : <Alert tone="primary" title={t("submit.visible_note_title")}>{t("submit.visible_note_body")}</Alert>}
                 {!confirm ? (
                   <Button size="lg" onClick={() => setConfirm(true)} disabled={!form.price || !form.delivery_days || !form.warranty_months || !requiredOk}>
-                    <Upload className="size-5" />{t("submit.submit")}
+                    <Upload className="size-5" />{p.content_sealed ? t("submit.submit") : t("submit.submit_plain")}
                   </Button>
                 ) : (
                   <div className="space-y-2 rounded-lg bg-primary-soft p-4 text-sm">

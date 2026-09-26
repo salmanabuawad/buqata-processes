@@ -1,14 +1,20 @@
 """RFQProcess — request for quotation (הצעת מחיר).
 
-Automatic, non-editable distribution to every matching supplier; sealed
-submissions; a simple opening (after the deadline, by an authorized procurement
-participant); a comparison table; a human decision; a protocol.
+Municipal policy for quotation requests is more flexible than for tenders:
+* distribution is generated automatically from categories, and procurement may
+  then add or remove suppliers — every change needs a reason and is recorded;
+* the opening mode is chosen when the request is created (`opening_mode`):
+  - `visible`: offers are shown to the process team as they arrive (default);
+  - `sealed_anytime`: sealed; may be opened before the deadline, which closes
+    submissions;
+  - `sealed_after_deadline`: sealed; opens only after the deadline;
+* a comparison table, a human decision and a protocol, as always.
 """
 from __future__ import annotations
 
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from pydantic import Field, field_validator
 
@@ -23,6 +29,7 @@ class RFQDetails(StrictModel):
     expected_delivery_date: Optional[date] = None
     additional_requirements: str = Field(default="", max_length=10_000)
     service_regions: List[str] = Field(default_factory=list, max_length=20)
+    opening_mode: Literal["visible", "sealed_anytime", "sealed_after_deadline"] = "visible"
 
 
 class RFQSubmission(StrictModel):
@@ -45,6 +52,7 @@ class RFQProcess(ProcessDefinition):
     create_permission = "process.create.rfq"
     submitter_kind = "supplier"
     distribution = "category_match"
+    distribution_editable = True
     sealed = True
     details_model = RFQDetails
     submission_model = RFQSubmission
@@ -55,8 +63,8 @@ class RFQProcess(ProcessDefinition):
         DocumentRequirement("supporting", False, (".pdf", ".docx", ".xlsx", ".zip", ".png", ".jpg", ".jpeg"), multiple=True,
                             names={"he": "מסמכים נוספים", "ar": "مستندات إضافية", "en": "Supporting documents"}),
     ]
+    # Base rules; `opening_rules_for` adds the time rule for sealed_after_deadline.
     default_opening_rules = [
-        {"type": "time"},
         {"type": "role", "params": {"permission": "opening.initiate"}},
         {"type": "identity", "params": {"require_mfa": False}},
         {"type": "multi_approval"},
@@ -64,6 +72,15 @@ class RFQProcess(ProcessDefinition):
     default_required_approvals = 1
     timeline = ["draft", "published", "notified", "submission", "deadline", "opening", "evaluation", "decision", "closed"]
     protocol_types = ["rfq_opening", "rfq_decision"]
+
+    def content_sealed(self, process) -> bool:
+        return (process.details or {}).get("opening_mode", "visible") != "visible"
+
+    def opening_rules_for(self, details: dict) -> List[dict]:
+        rules = list(self.default_opening_rules)
+        if details.get("opening_mode") == "sealed_after_deadline":
+            rules.insert(0, {"type": "time"})
+        return rules
 
     def publish_problems(self, process, category_count: int) -> List[str]:
         problems = []

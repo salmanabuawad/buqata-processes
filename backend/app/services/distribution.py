@@ -1,9 +1,14 @@
-"""DistributionService — automatic, non-editable supplier distribution.
+"""DistributionService — automatic supplier distribution.
 
-Municipal staff choose categories; the system chooses recipients. Nothing in
-this module accepts an inclusion or exclusion list, and no function edits or
-deletes recipients once written: supplements go into a new SUPPLEMENTAL
-snapshot.
+Staff choose categories; the system computes recipients. Snapshots are never
+edited: late registrants go into a SUPPLEMENTAL snapshot, manual additions into
+a MANUAL snapshot.
+
+Whether staff may change the list is the process type's policy
+(`ProcessDefinition.distribution_editable`): allowed for quotation requests,
+refused for tenders. Every manual change carries a reason, is audited and is
+shown in the fairness report and protocol. A removal marks the recipient row
+(`removed_at`, `removed_by`, `removal_reason`); it never deletes it.
 """
 from __future__ import annotations
 
@@ -17,6 +22,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.config import get_settings
 from app.core import clock
+from app.core.errors import Conflict, Forbidden, Invalid, NotFound
 from app.core.security import new_token, sha256_hex, token_hash
 from app.engines.matching import CategoryRef, Match, match_supplier
 from app.models import (
@@ -40,6 +46,7 @@ from app.services.notification_templates import PROCESS_KIND
 class MatchedSupplier:
     supplier: Supplier
     matches: List[Match]
+    manual: Optional[dict] = None  # {"reason", "by"} for a manual addition
 
 
 def _refs(categories: Sequence[Category]) -> List[CategoryRef]:
@@ -66,11 +73,14 @@ def match_suppliers(db: Session, categories: Sequence[Category], regions: Sequen
 
 
 def _reason(matched: MatchedSupplier) -> dict:
-    return {"matches": [
+    reason = {"matches": [
         {"supplier_category_id": m.supplier_category_id, "process_category_id": m.process_category_id,
          "relation": m.relation}
         for m in matched.matches
     ]}
+    if matched.manual:
+        reason["manual"] = matched.manual
+    return reason
 
 
 def _snapshot_hash(process_id: uuid.UUID, kind: str, rows: List[dict]) -> str:
@@ -97,14 +107,15 @@ def _supplier_user(db: Session, supplier: Supplier) -> Optional[User]:
 
 
 def _write_snapshot(db: Session, process: Process, kind: str, matched: List[MatchedSupplier], actor: Actor,
-                    categories: List[Category]) -> DistributionSnapshot:
+                    categories: List[Category], extra_rule: Optional[dict] = None) -> DistributionSnapshot:
     rule = {
-        "strategy": "category_match",
+        "strategy": "manual" if kind == "MANUAL" else "category_match",
         "category_ids": sorted(str(c.id) for c in categories),
         "regions": (process.details or {}).get("service_regions", []),
         "relations": ["exact", "supplier_broader", "supplier_narrower"],
         "supplier_status": "ACTIVE",
     }
+    rule.update(extra_rule or {})
     rows = [{"supplier_id": str(m.supplier.id), "reason": _reason(m)} for m in matched]
     snapshot = DistributionSnapshot(
         id=uuid.uuid4(), process_id=process.id, kind=kind, rule=rule, recipient_count=len(matched),
@@ -157,11 +168,119 @@ def _write_snapshot(db: Session, process: Process, kind: str, matched: List[Matc
     return snapshot
 
 
-def create_initial_distribution(db: Session, process: Process, actor: Actor) -> DistributionSnapshot:
+def _require_editable(process: Process) -> None:
+    if not get_definition(process.process_type).distribution_editable:
+        raise Forbidden("distribution_not_editable", "The distribution of this process type cannot be changed")
+
+
+def _require_reason(reason: str) -> str:
+    reason = (reason or "").strip()
+    if len(reason) < 5:
+        raise Invalid("reason_required", "A reason is required for every change to the distribution list")
+    return reason
+
+
+def _active_suppliers(db: Session, ids: Sequence[uuid.UUID]) -> List[Supplier]:
+    ids = list(dict.fromkeys(ids))
+    found = list(db.execute(select(Supplier).where(Supplier.id.in_(ids))).scalars()) if ids else []
+    if len(found) != len(ids) or any(s.status != "ACTIVE" for s in found):
+        raise Invalid("invalid_supplier", "Every supplier must exist and be active")
+    return found
+
+
+def _manual(reason: str, actor: Actor) -> dict:
+    return {"reason": reason, "by": str(actor.user_id) if actor.user_id else None}
+
+
+def create_initial_distribution(db: Session, process: Process, actor: Actor,
+                                excluded_ids: Sequence[uuid.UUID] = (), additional_ids: Sequence[uuid.UUID] = (),
+                                reason: str = "") -> DistributionSnapshot:
     categories = _process_categories(db, process)
     regions = (process.details or {}).get("service_regions", [])
     matched = match_suppliers(db, categories, regions)
-    return _write_snapshot(db, process, "INITIAL", matched, actor, categories)
+    extra_rule = None
+    if excluded_ids or additional_ids:
+        _require_editable(process)
+        reason = _require_reason(reason)
+        excluded = set(excluded_ids)
+        matched_ids = {m.supplier.id for m in matched}
+        if excluded - matched_ids:
+            raise Invalid("invalid_supplier", "Only matched suppliers can be excluded")
+        removed = [m for m in matched if m.supplier.id in excluded]
+        matched = [m for m in matched if m.supplier.id not in excluded]
+        for supplier in _active_suppliers(db, [i for i in additional_ids if i not in matched_ids]):
+            matched.append(MatchedSupplier(supplier, [], _manual(reason, actor)))
+        added = [m for m in matched if m.manual]
+        extra_rule = {
+            "manual_exclusions": [{"supplier_id": str(m.supplier.id), "company_name": m.supplier.company_name,
+                                   "reason": reason} for m in removed],
+            "manual_additions": [{"supplier_id": str(m.supplier.id), "company_name": m.supplier.company_name,
+                                  "reason": reason} for m in added],
+        }
+        audit.record(db, "DISTRIBUTION_EDITED", actor, process_id=process.id,
+                     metadata={"stage": "publication", "reason": reason,
+                               "excluded": sorted(str(m.supplier.id) for m in removed),
+                               "added": sorted(str(m.supplier.id) for m in added)})
+    return _write_snapshot(db, process, "INITIAL", matched, actor, categories, extra_rule)
+
+
+def _editable_now(process: Process) -> None:
+    _require_editable(process)
+    if process.status != "PUBLISHED" or clock.now() >= process.submission_deadline:
+        raise Conflict("distribution_closed", "The distribution list can be changed only while submissions are open")
+
+
+def add_recipient(db: Session, process: Process, supplier_id: uuid.UUID, reason: str,
+                  actor: Actor) -> DistributionRecipient:
+    _editable_now(process)
+    reason = _require_reason(reason)
+    supplier = _active_suppliers(db, [supplier_id])[0]
+    existing = db.execute(select(DistributionRecipient).where(
+        DistributionRecipient.process_id == process.id,
+        DistributionRecipient.supplier_id == supplier.id)).scalar_one_or_none()
+    if existing is not None and existing.active:
+        raise Conflict("already_invited", "This supplier is already on the distribution list")
+    if existing is not None:
+        existing.removed_at = None
+        existing.removed_by = None
+        existing.removal_reason = None
+        audit.record(db, "DISTRIBUTION_SUPPLIER_RESTORED", actor, process_id=process.id,
+                     metadata={"supplier_id": supplier.id, "reason": reason})
+        return existing
+    categories = _process_categories(db, process)
+    regions = (process.details or {}).get("service_regions", [])
+    match = next((m for m in match_suppliers(db, categories, regions) if m.supplier.id == supplier.id), None)
+    entry = MatchedSupplier(supplier, match.matches if match else [], _manual(reason, actor))
+    _write_snapshot(db, process, "MANUAL", [entry], actor, categories,
+                    {"manual_additions": [{"supplier_id": str(supplier.id), "company_name": supplier.company_name,
+                                           "reason": reason}]})
+    audit.record(db, "DISTRIBUTION_SUPPLIER_ADDED", actor, process_id=process.id,
+                 metadata={"supplier_id": supplier.id, "reason": reason})
+    return db.execute(select(DistributionRecipient).where(
+        DistributionRecipient.process_id == process.id,
+        DistributionRecipient.supplier_id == supplier.id)).scalar_one()
+
+
+def remove_recipient(db: Session, process: Process, supplier_id: uuid.UUID, reason: str, actor: Actor) -> None:
+    from app.models import Submission
+
+    _editable_now(process)
+    reason = _require_reason(reason)
+    recipient = db.execute(select(DistributionRecipient).where(
+        DistributionRecipient.process_id == process.id,
+        DistributionRecipient.supplier_id == supplier_id)).scalar_one_or_none()
+    if recipient is None or not recipient.active:
+        raise NotFound("recipient")
+    submitted = db.execute(select(Submission.id).where(
+        Submission.process_id == process.id, Submission.supplier_id == supplier_id,
+        Submission.current_version_id.is_not(None))).first()
+    if submitted:
+        raise Conflict("supplier_already_submitted", "This supplier has already submitted and cannot be removed")
+    recipient.removed_at = clock.now()
+    recipient.removed_by = actor.user_id
+    recipient.removal_reason = reason
+    audit.record(db, "DISTRIBUTION_SUPPLIER_REMOVED", actor, process_id=process.id,
+                 metadata={"supplier_id": supplier_id, "reason": reason})
 
 
 def extend_for_supplier(db: Session, supplier: Supplier, actor: Actor) -> int:

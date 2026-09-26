@@ -1,7 +1,9 @@
-"""Comparison of opened submissions and recording of decisions.
+"""Comparison of submissions and recording of decisions.
 
-The comparison never ranks, scores or highlights a winner. Decisions are
-recorded only by an authorized participant, with a reason.
+Content is readable after the vault is opened, or at any time for a process
+whose definition says it is not sealed (an unsealed quotation request). The
+comparison never ranks, scores or highlights a winner. Decisions are recorded
+only by an authorized participant, with a reason.
 """
 from __future__ import annotations
 
@@ -26,7 +28,8 @@ def comparison(db: Session, ctx: AuthContext, process: Process) -> dict:
     definition = get_definition(process.process_type)
     vault_row = process_service.vault_of(db, process)
     submissions = process_service.submitted(db, process)
-    payloads = vault_service.read_payloads(vault_row, submissions, ctx.actor())
+    sealed = definition.content_sealed(process)
+    payloads = vault_service.read_payloads(vault_row, submissions, ctx.actor(), sealed=sealed)
     today = clock.now().date()
     rows = []
     for submission in submissions:
@@ -44,7 +47,7 @@ def comparison(db: Session, ctx: AuthContext, process: Process) -> dict:
             "submitted_at": submission.submitted_at.isoformat(),
             "version_no": version.version_no,
             "values": definition.comparison_row(payload) if payload is not None else None,
-            "integrity_ok": payload is not None and all(d.file.integrity_status == "OK" for d in version.documents),
+            "integrity_ok": payload is not None and all(d.file.integrity_status != "FAILED" for d in version.documents),
             "documents": [
                 {"id": str(d.id), "kind": d.kind, "filename": d.file.original_filename,
                  "size_bytes": d.file.size_bytes, "sha256": d.file.sha256, "integrity": d.file.integrity_status}
@@ -58,7 +61,8 @@ def comparison(db: Session, ctx: AuthContext, process: Process) -> dict:
         })
         audit.record(db, "PROPOSAL_VIEWED", ctx.actor(), process_id=process.id, submission_id=submission.id,
                      metadata={"view": "comparison"})
-    return {"process_id": str(process.id), "opened_at": vault_row.opened_at.isoformat(), "rows": rows,
+    return {"process_id": str(process.id), "sealed": sealed,
+            "opened_at": vault_row.opened_at.isoformat() if vault_row.opened_at else None, "rows": rows,
             "ranking": None}
 
 
@@ -71,7 +75,9 @@ def download(db: Session, ctx: AuthContext, submission_id: uuid.UUID, document_i
     document = db.get(SubmissionDocument, document_id)
     if document is None or document.version.submission_id != submission.id:
         raise NotFound("document")
-    data = vault_service.read_document(db, process_service.vault_of(db, process), submission, document, ctx.actor())
+    sealed = get_definition(process.process_type).content_sealed(process)
+    data = vault_service.read_document(db, process_service.vault_of(db, process), submission, document, ctx.actor(),
+                                       sealed=sealed)
     audit.record(db, "PROPOSAL_DOWNLOADED", ctx.actor(), process_id=process.id, submission_id=submission.id,
                  metadata={"document_id": document.id, "sha256": document.file.sha256, "verified": True})
     return document.file, data
@@ -80,7 +86,10 @@ def download(db: Session, ctx: AuthContext, submission_id: uuid.UUID, document_i
 def record_decision(db: Session, ctx: AuthContext, process: Process, decision_type: str,
                     selected_submission_id: Optional[uuid.UUID], reason: str) -> Decision:
     authorization.require_scope(db, ctx, process, "decision.record")
-    if process.status != "OPENED":
+    sealed = get_definition(process.process_type).content_sealed(process)
+    # Sealed: only after opening. Unsealed: any time after publication — the
+    # decision itself closes submissions.
+    if not (process.status == "OPENED" or (process.status == "PUBLISHED" and not sealed)):
         raise Conflict("invalid_transition", "A decision can be recorded only after opening")
     if len(reason.strip()) < 10:
         raise Invalid("reason_required", "Explain the decision (at least 10 characters)")
@@ -91,8 +100,9 @@ def record_decision(db: Session, ctx: AuthContext, process: Process, decision_ty
         if selected_submission_id is None:
             raise Invalid("submission_required", "Choose the selected submission")
         selected = db.get(Submission, selected_submission_id)
-        if selected is None or selected.process_id != process.id or selected.status != "OPENED":
-            raise Invalid("invalid_submission", "The selected submission is not an opened submission of this process")
+        readable_status = ("OPENED",) if sealed else ("OPENED", "SUBMITTED")
+        if selected is None or selected.process_id != process.id or selected.status not in readable_status:
+            raise Invalid("invalid_submission", "The selected submission is not a readable submission of this process")
         if selected.current_version and any(d.file.integrity_status == "FAILED" for d in selected.current_version.documents):
             raise Forbidden("file_integrity_failure", "A submission with failed integrity cannot be selected")
     elif selected_submission_id is not None:

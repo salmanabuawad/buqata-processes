@@ -227,3 +227,51 @@ def test_granting_business_role_alerts_oversight(world, db, mail):
     assert response.status_code == 200
     alerts = db.execute(select(Notification).where(Notification.event_type == "SECURITY_ALERT")).scalars().all()
     assert any(n.recipient_email == "auditor@example.com" for n in alerts)
+
+
+# ---- opening modes (quotation requests) ----------------------------------------------
+
+def test_visible_mode_shows_offers_immediately_and_allows_early_decision(world, db):
+    proc = ApiClient("proc@example.com")
+    process = create_rfq(proc, db, opening_mode="visible")
+    pid = process["id"]
+    assert submit_offer(ApiClient("desktop@example.com"), pid, 81000).status_code == 200
+    rows = proc.get(f"/api/v1/processes/{pid}/comparison").json()["rows"]
+    assert [r["values"]["price_before_vat_agorot"] for r in rows] == [8_100_000]
+    assert _events(db, "PROPOSAL_VIEWED", pid)
+    fairness = proc.get(f"/api/v1/processes/{pid}/distribution").json()
+    assert fairness["submitted_revealed"] is True
+    assert proc.post(f"/api/v1/processes/{pid}/opening/requests").json()["error"]["code"] == "not_sealed"
+    assert ApiClient("admin@example.com").get(f"/api/v1/processes/{pid}/comparison").status_code == 403
+    assert ApiClient("proc2@example.com").get(f"/api/v1/processes/{pid}/comparison").status_code == 403
+    decided = proc.post(f"/api/v1/processes/{pid}/decision", json={
+        "decision_type": "AWARD", "selected_submission_id": rows[0]["submission_id"],
+        "reason": "Urgent need, price within the approved budget"})
+    assert decided.status_code == 200 and decided.json()["status"] == "DECIDED"
+    late = submit_offer(ApiClient("rootit@example.com"), pid)
+    assert late.status_code == 409 and late.json()["error"]["code"] == "not_accepting_submissions"
+    protocol = proc.post(f"/api/v1/processes/{pid}/protocols", json={"locale": "en"}).json()
+    assert "not sealed" in proc.get(f"/api/v1/protocols/{protocol['id']}/html").text
+
+
+def test_sealed_anytime_can_open_before_deadline_which_closes_submissions(world, db):
+    proc = ApiClient("proc@example.com")
+    process = create_rfq(proc, db, opening_mode="sealed_anytime")
+    pid = process["id"]
+    assert submit_offer(ApiClient("desktop@example.com"), pid).status_code == 200
+    assert proc.get(f"/api/v1/processes/{pid}/comparison").json()["error"]["code"] == "vault_sealed"
+    opened = proc.post(f"/api/v1/processes/{pid}/opening/requests").json()
+    assert opened["status"] == "EXECUTED"
+    assert not _events(db, "EARLY_OPEN_ATTEMPT", pid)
+    assert len(proc.get(f"/api/v1/processes/{pid}/comparison").json()["rows"]) == 1
+    assert submit_offer(ApiClient("rootit@example.com"), pid).status_code == 409
+
+
+def test_opening_mode_sets_the_policy_and_can_change_while_draft(world, db):
+    proc = ApiClient("proc@example.com")
+    draft = create_rfq(proc, db, publish=False, opening_mode="sealed_anytime")
+    assert not any(r["type"] == "time" for r in draft["opening_policy"]["rules"])
+    updated = proc.patch(f"/api/v1/processes/{draft['id']}", json={"details": {
+        "quantity": 20, "opening_mode": "sealed_after_deadline"}}).json()
+    assert updated["opening_policy"]["rules"][0]["type"] == "time"
+    assert updated["content_sealed"] is True

@@ -28,8 +28,10 @@ never claims MFA.
   (networking, cyber, software, printers) correctly *not* invited. 27 notified,
   11 opened the invitation, 8 started, 6 submitted. Deadline two hours before
   seeding — **awaiting opening**.
-* Two open RFQs (laptops, air-conditioning maintenance), two completed and
-  closed RFQs with decisions and protocols, one draft.
+* Two open RFQs showing the other opening modes: laptops (`visible` — offers
+  readable as they arrive) and air-conditioning maintenance (`sealed_anytime`
+  — may be opened early). Two completed and closed RFQs with decisions and
+  protocols, one draft.
 
 ## Walkthrough (≈10 minutes)
 
@@ -40,8 +42,9 @@ never claims MFA.
    supplemental snapshot) to any open RFQ it matches.
 3. **Procurement manager** (סועאד) → *פתיחת הליך חדש* → *הצעת מחיר*. Pick
    "מחשבים נייחים": the side panel shows **"27 registered suppliers match
-   this request"**. Open the list: read-only, no remove button (and the API
-   rejects any attempt).
+   this request"**. Choose the opening mode. Open the list: untick a supplier
+   or add one from the registry — a reason is required, and the change will
+   appear in the fairness report and the protocol.
 4. Open **RFQ-2026-0184** → *הפצה והוגנות*: 27 eligible · 27 notified ·
    delivered · 11 opened · 8 started · 6 submitted. The per-supplier
    "submitted" column shows a lock — who submitted is hidden until opening.

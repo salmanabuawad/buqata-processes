@@ -122,7 +122,21 @@ class ProcessUpdate(Strict):
 
 
 class PublishBody(Strict):
-    """Deliberately empty: publication takes no recipient input."""
+    """Manual changes to the computed distribution are accepted only where the
+    process type allows them (quotation requests), and always need a reason."""
+
+    excluded_supplier_ids: List[uuid.UUID] = Field(default_factory=list, max_length=500)
+    additional_supplier_ids: List[uuid.UUID] = Field(default_factory=list, max_length=500)
+    change_reason: str = Field(default="", max_length=1000)
+
+
+class RecipientChangeBody(Strict):
+    reason: str = Field(min_length=5, max_length=1000)
+
+
+class RecipientAddBody(Strict):
+    supplier_id: uuid.UUID
+    reason: str = Field(min_length=5, max_length=1000)
 
 
 class CancelBody(Strict):

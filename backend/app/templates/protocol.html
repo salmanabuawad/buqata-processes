@@ -62,8 +62,20 @@
   <dt>{{ t.snapshot }} ({{ s.kind }})</dt><dd><span class="hash">{{ s.hash }}</span> · {{ s.count }}</dd>
   {% endfor %}
 </dl>
+<h3 style="font-size:13px;margin:12px 0 4px">{{ t.manual_changes }}</h3>
+{% if distribution_changes %}
+<table>
+  <tbody>
+  {% for c in distribution_changes %}
+    <tr><td>{{ t.added if c.kind == 'added' else t.removed }}</td><td>{{ c.supplier }}</td><td>{{ c.reason }}</td><td class="num">{{ c.at }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}<p class="muted">{{ t.no_manual_changes }}</p>{% endif %}
 
 <h2>{{ t.s_opening }}</h2>
+{% if not sealed %}<p class="note">{{ t.unsealed_note }}</p>{% else %}
+{% if opened_early %}<p class="note">{{ t.early_note }}</p>{% endif %}
 <dl>
   <dt>{{ t.sealed_count }}</dt><dd>{{ submissions | length }}</dd>
   <dt>{{ t.opened_at }}</dt><dd class="num">{{ opened_at }}</dd>
@@ -77,6 +89,7 @@
   </tbody>
 </table>
 <p class="note">{{ t.opening_note }}</p>
+{% endif %}
 
 <h2>{{ t.s_submissions }}</h2>
 <table>

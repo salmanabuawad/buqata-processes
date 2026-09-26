@@ -2,13 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  ArrowDownUp, CheckCircle2, CircleDashed, Download, ExternalLink, FileText, KeyRound, Lock, LockOpen, Printer, Send, ShieldCheck, XCircle,
+  ArrowDownUp, CheckCircle2, Eye, CircleDashed, Download, ExternalLink, FileText, KeyRound, Lock, LockOpen, Printer, Send, ShieldCheck, XCircle,
 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { EventLabel, StatusBadge } from "@/components/EventLabel";
 import { Timeline, type Stage } from "@/components/Timeline";
+import { AddSupplierModal, OpeningModeBadge } from "@/components/RfqControls";
 import {
-  Alert, Badge, Button, Card, CardHeader, cx, Empty, ErrorAlert, Field, KeyValue, Modal, PageHeader, Select, Spinner, Stat, Table, Tabs, Textarea,
+  Alert, Badge, Button, Card, CardHeader, cx, Empty, ErrorAlert, Field, Input, KeyValue, Modal, PageHeader, Select, Spinner, Stat, Table, Tabs, Textarea,
 } from "@/components/ui";
 import { useI18n } from "@/i18n/I18nProvider";
 import { agorotToShekels, api, ApiError, formatBytes, formatDate, formatDateTime } from "@/lib/api";
@@ -20,13 +21,14 @@ interface ProcessView {
   contact: { name: string; email: string; phone: string };
   categories: { id: string; path: string }[];
   documents: { id: string; kind: string; title: string; filename: string; size_bytes: number; sha256: string }[];
-  timeline: Stage[]; vault_status: string | null; server_time: string;
+  timeline: Stage[]; vault_status: string | null; server_time: string; opening_mode: string | null; content_sealed: boolean;
   created_by?: string; created_at?: string; recipient_count?: number; sealed_count?: number; my_participation?: string[];
   participants?: { user_id: string; name: string; participation: string }[];
   opening_policy?: { rules: { type: string; params?: Record<string, unknown> }[]; required_approvals: number; frozen: boolean };
   cancelled_reason?: string | null;
   decision?: { decision_type: string; reason: string; supplier_name: string | null; decided_at: string; decided_by: string | null } | null;
-  can?: { edit: boolean; open: boolean; read_content: boolean; decide: boolean; protocol: boolean; monitor: boolean };
+  can?: { edit: boolean; open: boolean; read_content: boolean; content_readable_now: boolean; decide: boolean; protocol: boolean;
+    monitor: boolean; edit_distribution: boolean };
 }
 
 type TabKey = "overview" | "distribution" | "opening" | "evaluation" | "protocols" | "audit";
@@ -42,6 +44,7 @@ function Overview({ p }: { p: ProcessView }) {
           {p.description && <p className="whitespace-pre-line text-ink-2">{p.description}</p>}
           <KeyValue items={[
             [t("rfq.quantity"), `${d.quantity ?? "—"} ${d.unit ?? ""}`],
+            [t("opening_mode.title"), <OpeningModeBadge key="om" mode={p.opening_mode} />],
             [t("process.categories"), <div key="c" className="flex flex-wrap gap-1.5">{p.categories.map((c) => <Badge key={c.id} tone="primary">{c.path}</Badge>)}</div>],
             [t("rfq.deadline"), <span key="d" className="ltr">{formatDateTime(p.submission_deadline, locale)}</span>],
             [t("rfq.expected_delivery"), d.expected_delivery_date ? formatDate(d.expected_delivery_date, locale) : "—"],
@@ -105,21 +108,49 @@ function Overview({ p }: { p: ProcessView }) {
 interface Fairness {
   stats: Record<string, number>;
   submitted_revealed: boolean;
+  manual_changes_possible: boolean;
+  editable_now: boolean;
+  excluded_at_publication: { supplier_id: string; company_name: string; reason: string }[];
   snapshots: { id: string; kind: string; created_at: string; recipient_count: number; snapshot_hash: string }[];
   recipients: { supplier_id: string; supplier_name: string; city: string; snapshot_kind: string; match: { relation: string; supplier_category: string; process_category: string }[];
-    notified_at: string; delivery_status: string; opened_at: string | null; started: boolean; submitted: boolean | null }[];
+    notified_at: string; delivery_status: string; opened_at: string | null; started: boolean; submitted: boolean | null;
+    manual_reason: string | null; removed: boolean; removed_at: string | null; removed_by: string | null; removal_reason: string | null }[];
 }
 
 function Distribution({ p }: { p: ProcessView }) {
   const { t, locale } = useI18n();
   const [data, setData] = useState<Fairness | null>(null);
-  useEffect(() => { api.get<Fairness>(`/processes/${p.id}/distribution`).then(setData); }, [p.id]);
+  const [adding, setAdding] = useState(false);
+  const [removing, setRemoving] = useState<{ id: string; name: string } | null>(null);
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<unknown>(null);
+  const load = useCallback(() => api.get<Fairness>(`/processes/${p.id}/distribution`).then(setData), [p.id]);
+  useEffect(() => { if (p.status !== "DRAFT") void load(); }, [p.status, load]);
   if (p.status === "DRAFT") return <Empty title={t("fairness.not_published")}>{t("fairness.not_published_body")}</Empty>;
   if (!data) return <Spinner />;
   const s = data.stats;
+  const editable = data.editable_now && !!p.can?.edit_distribution;
+
+  const add = async (supplierId: string, _name: string, why: string) => {
+    setBusy(true); setError(null);
+    try { await api.post(`/processes/${p.id}/distribution/recipients`, { supplier_id: supplierId, reason: why }); setAdding(false); await load(); }
+    catch (err) { setError(err); } finally { setBusy(false); }
+  };
+  const remove = async () => {
+    if (!removing) return;
+    setBusy(true); setError(null);
+    try { await api.post(`/processes/${p.id}/distribution/recipients/${removing.id}/remove`, { reason }); setRemoving(null); setReason(""); await load(); }
+    catch (err) { setError(err); } finally { setBusy(false); }
+  };
+
   return (
     <div className="space-y-6">
-      <Alert tone="success" title={t("fairness.banner_title")}>{t("fairness.banner_body")}</Alert>
+      {data.manual_changes_possible ? (
+        <Alert tone="primary" title={t("fairness.banner_editable_title")}>{t("fairness.banner_editable_body")}</Alert>
+      ) : (
+        <Alert tone="success" title={t("fairness.banner_title")}>{t("fairness.banner_body")}</Alert>
+      )}
       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-7">
         <Stat label={t("fairness.eligible")} value={s.eligible} tone="primary" />
         <Stat label={t("fairness.notifications")} value={s.notifications} />
@@ -127,8 +158,13 @@ function Distribution({ p }: { p: ProcessView }) {
         <Stat label={t("fairness.failed")} value={s.failed} tone={s.failed ? "danger" : "neutral"} />
         <Stat label={t("fairness.opened")} value={s.opened} />
         <Stat label={t("fairness.started")} value={s.started} />
-        <Stat label={t("fairness.submitted")} value={s.submitted} tone="sealed" />
+        <Stat label={t("fairness.submitted")} value={data.submitted_revealed ? s.submitted : "—"} tone="sealed" />
       </div>
+      {(s.manually_added > 0 || s.manually_removed > 0 || data.excluded_at_publication.length > 0) && (
+        <Alert tone="warn" title={t("fairness.manual_changes_title")}>
+          {t("fairness.manual_changes_body", { added: s.manually_added, removed: s.manually_removed + data.excluded_at_publication.length })}
+        </Alert>
+      )}
       <Card>
         <CardHeader title={t("fairness.snapshots")} subtitle={t("fairness.snapshots_hint")} />
         <Table>
@@ -136,7 +172,7 @@ function Distribution({ p }: { p: ProcessView }) {
           <tbody>
             {data.snapshots.map((sn) => (
               <tr key={sn.id}>
-                <td><Badge tone={sn.kind === "INITIAL" ? "primary" : "neutral"}>{t(`fairness.kind_${sn.kind}`)}</Badge></td>
+                <td><Badge tone={sn.kind === "INITIAL" ? "primary" : sn.kind === "MANUAL" ? "warn" : "neutral"}>{t(`fairness.kind_${sn.kind}`)}</Badge></td>
                 <td className="ltr whitespace-nowrap">{formatDateTime(sn.created_at, locale)}</td>
                 <td>{sn.recipient_count}</td>
                 <td className="hash">{sn.snapshot_hash}</td>
@@ -145,35 +181,67 @@ function Distribution({ p }: { p: ProcessView }) {
           </tbody>
         </Table>
       </Card>
+      {data.excluded_at_publication.length > 0 && (
+        <Card>
+          <CardHeader title={t("fairness.excluded_title")} />
+          <ul className="divide-y divide-line text-sm">
+            {data.excluded_at_publication.map((x) => (
+              <li key={x.supplier_id} className="px-5 py-2.5"><span className="font-medium">{x.company_name}</span> <span className="text-muted">— {x.reason}</span></li>
+            ))}
+          </ul>
+        </Card>
+      )}
       <Card>
-        <CardHeader title={t("fairness.recipients_title")} subtitle={data.submitted_revealed ? undefined : t("fairness.submitted_hidden")} />
+        <CardHeader title={t("fairness.recipients_title")} subtitle={data.submitted_revealed ? undefined : t("fairness.submitted_hidden")}
+          actions={editable && <Button size="sm" variant="secondary" onClick={() => { setError(null); setAdding(true); }}>{t("distribution_edit.add")}</Button>} />
         <Table>
-          <thead><tr><th>{t("fairness.supplier")}</th><th>{t("fairness.match_reason")}</th><th>{t("fairness.delivery")}</th><th>{t("fairness.opened")}</th><th>{t("fairness.started")}</th><th>{t("fairness.submitted")}</th></tr></thead>
+          <thead><tr><th>{t("fairness.supplier")}</th><th>{t("fairness.match_reason")}</th><th>{t("fairness.delivery")}</th><th>{t("fairness.opened")}</th><th>{t("fairness.started")}</th><th>{t("fairness.submitted")}</th>{editable && <th />}</tr></thead>
           <tbody>
             {data.recipients.map((r) => (
-              <tr key={r.supplier_id}>
+              <tr key={r.supplier_id} className={r.removed ? "bg-surface-2/70" : ""}>
                 <td>
-                  <div className="font-medium">{r.supplier_name}</div>
+                  <div className={cx("font-medium", r.removed && "text-muted line-through")}>{r.supplier_name}</div>
                   <div className="text-xs text-muted">{r.city}{r.snapshot_kind === "SUPPLEMENTAL" && ` · ${t("fairness.kind_SUPPLEMENTAL")}`}</div>
+                  {r.removed && <div className="mt-1 text-xs text-danger">{t("distribution_edit.removed_line", { by: r.removed_by ?? "—", at: formatDateTime(r.removed_at, locale) })}: {r.removal_reason}</div>}
                 </td>
                 <td className="text-xs text-ink-2">
                   {r.match.map((m, i) => <div key={i}>{m.supplier_category} <span className="text-muted">({t(`match.${m.relation}`)})</span></div>)}
+                  {r.manual_reason && <div className="text-warn">{t("distribution_edit.added_manually")}: {r.manual_reason}</div>}
                 </td>
                 <td><Badge tone={r.delivery_status === "SENT" ? "success" : r.delivery_status === "PENDING" ? "primary" : "danger"}>{t(`delivery.${r.delivery_status}`)}</Badge></td>
                 <td className="ltr whitespace-nowrap text-xs">{r.opened_at ? formatDateTime(r.opened_at, locale) : "—"}</td>
                 <td>{r.started ? <CheckCircle2 className="size-4 text-accent" aria-label={t("common.yes")} /> : <span className="text-muted">—</span>}</td>
                 <td>{r.submitted === null ? <Lock className="size-4 text-sealed" aria-label={t("fairness.hidden")} /> : r.submitted ? <CheckCircle2 className="size-4 text-accent" aria-label={t("common.yes")} /> : <span className="text-muted">—</span>}</td>
+                {editable && (
+                  <td>{!r.removed && !r.submitted && (
+                    <Button size="sm" variant="ghost" onClick={() => { setError(null); setReason(""); setRemoving({ id: r.supplier_id, name: r.supplier_name }); }}>{t("distribution_edit.remove")}</Button>
+                  )}</td>
+                )}
               </tr>
             ))}
           </tbody>
         </Table>
       </Card>
+      <AddSupplierModal open={adding} onClose={() => setAdding(false)} busy={busy} error={<ErrorAlert error={error} />}
+        excludeIds={data.recipients.filter((r) => !r.removed).map((r) => r.supplier_id)} onConfirm={add} />
+      <Modal open={!!removing} onClose={() => setRemoving(null)} title={t("distribution_edit.remove_title", { name: removing?.name ?? "" })}
+        footer={<><Button variant="ghost" onClick={() => setRemoving(null)}>{t("common.cancel")}</Button>
+          <Button variant="danger" onClick={remove} busy={busy} disabled={reason.trim().length < 5}>{t("distribution_edit.remove")}</Button></>}>
+        <div className="space-y-4">
+          <Alert tone="warn">{t("distribution_edit.remove_note")}</Alert>
+          <Field label={t("distribution_edit.reason")} hint={t("distribution_edit.reason_hint")} required>
+            {(id) => <Input id={id} value={reason} onChange={(e) => setReason(e.target.value)} />}
+          </Field>
+          <ErrorAlert error={error} />
+        </div>
+      </Modal>
     </div>
   );
 }
 
 interface OpeningStatus {
   vault_status: string | null; opened_at: string | null; sealed_count: number; opening_time: string; phase: string;
+  content_sealed: boolean; opening_mode: string | null; submission_deadline: string;
   rules: { type: string }[]; required_approvals: number;
   evaluation_for_you: { satisfied: boolean; results: { rule: string; status: string; code: string; detail: Record<string, unknown> }[] };
   request: { id: string; status: string; requested_at: string; approvals: { approver: string; decision: string; decided_at: string; mfa: boolean }[] } | null;
@@ -210,7 +278,17 @@ function Opening({ p, reload }: { p: ProcessView; reload: () => void }) {
     }
   };
 
+  if (!status.content_sealed) {
+    return (
+      <Card className="border-primary/30 p-8 text-center">
+        <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-primary-soft text-primary"><Eye className="size-8" /></div>
+        <div className="mt-4 text-xl font-semibold">{t("opening.visible_title", { count: status.sealed_count })}</div>
+        <p className="mx-auto mt-2 max-w-lg text-sm text-ink-2">{t("opening.visible_body")}</p>
+      </Card>
+    );
+  }
   const sealed = status.vault_status === "SEALED";
+  const beforeDeadline = new Date(status.submission_deadline).getTime() > Date.now();
   const icon = (s: string) => s === "PASS" ? <CheckCircle2 className="size-5 text-accent" /> : s === "FAIL" ? <XCircle className="size-5 text-danger" /> : <CircleDashed className="size-5 text-warn" />;
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
@@ -274,6 +352,7 @@ function Opening({ p, reload }: { p: ProcessView; reload: () => void }) {
               ) : (
                 <div className="space-y-2 rounded-lg bg-primary-soft p-3 text-sm">
                   <p>{t("opening.confirm", { count: status.sealed_count })}</p>
+                  {beforeDeadline && status.opening_mode === "sealed_anytime" && <p className="font-medium text-warn">{t("opening.early_confirm")}</p>}
                   <div className="flex gap-2">
                     <Button onClick={open} busy={busy}>{t("opening.confirm_button")}</Button>
                     <Button variant="ghost" onClick={() => setConfirm(false)}>{t("common.cancel")}</Button>
@@ -281,7 +360,9 @@ function Opening({ p, reload }: { p: ProcessView; reload: () => void }) {
                 </div>
               )
             ) : <p className="text-sm text-muted">{t("opening.no_permission")}</p>}
-            {status.phase === "submission_open" && p.can?.open && <p className="text-xs text-muted">{t("opening.early_warning")}</p>}
+            {beforeDeadline && p.can?.open && (
+              <p className="text-xs text-muted">{status.opening_mode === "sealed_anytime" ? t("opening.early_allowed") : t("opening.early_warning")}</p>
+            )}
           </div>
         )}
       </Card>
@@ -309,9 +390,9 @@ function Evaluation({ p, reload }: { p: ProcessView; reload: () => void }) {
   const [decisionError, setDecisionError] = useState<unknown>(null);
 
   useEffect(() => {
-    if (p.vault_status !== "OPENED" || !p.can?.read_content) return;
+    if (!p.can?.content_readable_now || !p.can?.read_content) return;
     api.get<{ rows: ComparisonRow[] }>(`/processes/${p.id}/comparison`).then((r) => setRows(r.rows)).catch(setError);
-  }, [p.id, p.vault_status, p.can?.read_content]);
+  }, [p.id, p.can?.content_readable_now, p.can?.read_content]);
 
   const sorted = useMemo(() => {
     if (!rows) return null;
@@ -328,7 +409,7 @@ function Evaluation({ p, reload }: { p: ProcessView; reload: () => void }) {
     return [...rows].sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0));
   }, [rows, sort]);
 
-  if (p.vault_status !== "OPENED") {
+  if (!p.can?.content_readable_now) {
     return <Empty title={t("evaluation.sealed_title")}>{t("evaluation.sealed_body")}</Empty>;
   }
   if (!p.can?.read_content) return <Alert tone="warn" title={t("evaluation.no_access")}>{t("evaluation.no_access_body")}</Alert>;
@@ -364,6 +445,7 @@ function Evaluation({ p, reload }: { p: ProcessView; reload: () => void }) {
   return (
     <div className="space-y-6">
       <Alert tone="primary" title={t("evaluation.no_winner_title")}>{t("evaluation.no_winner_body")}</Alert>
+      {!p.content_sealed && p.status === "PUBLISHED" && <Alert tone="warn">{t("evaluation.live_note")}</Alert>}
       <Card>
         <CardHeader title={t("evaluation.comparison")} subtitle={t("evaluation.comparison_hint", { count: sorted.length })}
           actions={p.can?.decide && !p.decision && <Button onClick={() => setDecisionOpen(true)}>{t("evaluation.record_decision")}</Button>} />
@@ -495,7 +577,7 @@ function Protocols({ p, reload }: { p: ProcessView; reload: () => void }) {
     try { await api.post(`/processes/${p.id}/close`); reload(); } catch (err) { setError(err); } finally { setBusy(""); }
   };
 
-  const available = ["OPENED", "DECIDED", "CLOSED"].includes(p.status);
+  const available = !!p.can?.content_readable_now && !["DRAFT", "CANCELLED"].includes(p.status);
   return (
     <div className="space-y-6">
       <ErrorAlert error={error} />

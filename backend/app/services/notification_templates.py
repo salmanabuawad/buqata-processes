@@ -46,6 +46,24 @@ TEMPLATES: Dict[str, Dict[str, Tuple[str, str]]] = {
             "It will be opened only after the deadline, together with all other submissions.",
         ),
     },
+    "SUBMISSION_RECEIPT_OPEN": {
+        "he": (
+            "אישור קבלת הצעה — {reference}",
+            "הצעתכם להליך {reference} התקבלה ונשמרה מוצפנת.\n\nמספר אישור: {receipt}\nמועד הגשה: {submitted_at}\n"
+            "טביעת אצבע (SHA-256): {receipt_hash}\n\nבבקשה זו ההצעות גלויות לצוות הרכש של ההליך מרגע ההגשה.",
+        ),
+        "ar": (
+            "تأكيد استلام العرض — {reference}",
+            "تم استلام عرضكم للإجراء {reference} وحفظه مشفّراً.\n\nرقم التأكيد: {receipt}\nوقت التقديم: {submitted_at}\n"
+            "البصمة (SHA-256): {receipt_hash}\n\nالعروض في هذا الطلب ظاهرة لفريق المشتريات في الإجراء من لحظة التقديم.",
+        ),
+        "en": (
+            "Submission receipt — {reference}",
+            "Your submission for {reference} was received and stored encrypted.\n\nReceipt: {receipt}\n"
+            "Submitted at: {submitted_at}\nFingerprint (SHA-256): {receipt_hash}\n\n"
+            "In this request offers are visible to the process's procurement team from the moment of submission.",
+        ),
+    },
     "VAULT_OPENED": {
         "he": (
             "תיבת ההצעות הדיגיטלית נפתחה — {reference}",
