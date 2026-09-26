@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+/* Design tokens. Calm, government-grade: deep civic blue, a restrained green
+   drawn from the council's emblem, neutral slate surfaces. */
+:root {
+  --bg: #f5f7fa;
+  --surface: #ffffff;
+  --surface-2: #f0f3f7;
+  --ink: #0f1d2e;
+  --ink-2: #3c4a5c;
+  --muted: #5d6a7d;
+  --line: #dde3ea;
+  --line-strong: #c5cfda;
+  --primary: #1b4f8f;
+  --primary-ink: #ffffff;
+  --primary-soft: #e8f0fa;
+  --accent: #2b7449;
+  --accent-soft: #e7f4ec;
+  --warn: #8a5100;
+  --warn-soft: #fff4e0;
+  --danger: #b42318;
+  --danger-soft: #fdecea;
+  --sealed: #5b3fa3;
+  --sealed-soft: #f0ebfa;
+  --focus: #2563eb;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-primary: var(--primary);
+  --color-primary-ink: var(--primary-ink);
+  --color-primary-soft: var(--primary-soft);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-sealed: var(--sealed);
+  --color-sealed-soft: var(--sealed-soft);
+  --font-sans: var(--font-heebo), var(--font-arabic), system-ui, "Segoe UI", Arial, sans-serif;
+}
+
+html {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+html[lang="ar"] body {
+  font-family: var(--font-arabic), var(--font-heebo), system-ui, sans-serif;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Numbers, hashes and references keep their own direction inside RTL text. */
+.ltr {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.hash {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 12px;
+  direction: ltr;
+  unicode-bidi: isolate;
+  word-break: break-all;
+}
+
+.skip-link {
+  position: absolute;
+  inset-inline-start: 8px;
+  top: -48px;
+  background: var(--primary);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  z-index: 100;
+}
+.skip-link:focus {
+  top: 8px;
+}
+
+dialog::backdrop {
+  background: rgb(15 29 46 / 0.45);
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

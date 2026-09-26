@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="{{ locale }}" dir="{{ 'ltr' if locale == 'en' else 'rtl' }}">
+<head>
+<meta charset="utf-8">
+<title>{{ t.title }} — {{ process.reference_number }}</title>
+<style>
+  :root { --ink:#0f172a; --muted:#475569; --line:#cbd5e1; --accent:#1d4ed8; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", "Noto Sans Hebrew", "Noto Naskh Arabic", Arial, sans-serif; color: var(--ink);
+         margin: 0; padding: 32px; font-size: 13px; line-height: 1.55; background: #fff; }
+  header { display:flex; justify-content:space-between; align-items:flex-start; border-bottom: 3px solid var(--accent);
+           padding-bottom: 12px; margin-bottom: 20px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 15px; margin: 24px 0 8px; color: var(--accent); border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+  .muted { color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; margin: 6px 0; }
+  th, td { border: 1px solid var(--line); padding: 6px 8px; text-align: start; vertical-align: top; }
+  th { background: #f1f5f9; font-weight: 600; }
+  dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 0; }
+  dt { color: var(--muted); }
+  dd { margin: 0; }
+  .hash { font-family: Consolas, "Courier New", monospace; font-size: 11px; word-break: break-all; direction: ltr; unicode-bidi: embed; }
+  .num { direction: ltr; unicode-bidi: embed; white-space: nowrap; }
+  .signatures { display:grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 40px; }
+  .signatures div { border-top: 1px solid var(--ink); padding-top: 6px; }
+  .note { background:#f8fafc; border:1px solid var(--line); padding:8px 10px; margin-top: 8px; }
+  footer { margin-top: 32px; border-top: 1px solid var(--line); padding-top: 8px; font-size: 11px; color: var(--muted); }
+  @media print { body { padding: 0; } .noprint { display:none; } h2 { break-after: avoid; } table { break-inside: auto; } tr { break-inside: avoid; } }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="muted">{{ t.council }}</div>
+    <h1>{{ t.title }}</h1>
+    <div>{{ process.reference_number }} — {{ process.title }}</div>
+  </div>
+  <div class="muted" style="text-align:end">
+    {{ t.generated }}: <span class="num">{{ generated_at }}</span><br>
+    {{ t.generated_by }}: {{ generated_by }}
+  </div>
+</header>
+
+<h2>{{ t.s_process }}</h2>
+<dl>
+  <dt>{{ t.type }}</dt><dd>{{ kind }}</dd>
+  <dt>{{ t.categories }}</dt><dd>{{ categories | join(' · ') }}</dd>
+  <dt>{{ t.quantity }}</dt><dd>{{ process.details.get('quantity', '—') }} {{ process.details.get('unit', '') }}</dd>
+  <dt>{{ t.published }}</dt><dd class="num">{{ published_at }}</dd>
+  <dt>{{ t.deadline }}</dt><dd class="num">{{ deadline }}</dd>
+  <dt>{{ t.version_hash }}</dt><dd class="hash">{{ version_hash }}</dd>
+</dl>
+
+<h2>{{ t.s_distribution }}</h2>
+<dl>
+  <dt>{{ t.rule }}</dt><dd>{{ t.rule_text }}</dd>
+  <dt>{{ t.recipients }}</dt><dd>{{ distribution.recipients }}</dd>
+  <dt>{{ t.delivered }}</dt><dd>{{ distribution.delivered }}</dd>
+  <dt>{{ t.failed }}</dt><dd>{{ distribution.failed }}</dd>
+  <dt>{{ t.opened_invitation }}</dt><dd>{{ distribution.opened }}</dd>
+  {% for s in distribution.snapshots %}
+  <dt>{{ t.snapshot }} ({{ s.kind }})</dt><dd><span class="hash">{{ s.hash }}</span> · {{ s.count }}</dd>
+  {% endfor %}
+</dl>
+
+<h2>{{ t.s_opening }}</h2>
+<dl>
+  <dt>{{ t.sealed_count }}</dt><dd>{{ submissions | length }}</dd>
+  <dt>{{ t.opened_at }}</dt><dd class="num">{{ opened_at }}</dd>
+</dl>
+<table>
+  <thead><tr><th>{{ t.approver }}</th><th>{{ t.decision }}</th><th>{{ t.time }}</th><th>{{ t.auth }}</th><th>IP</th></tr></thead>
+  <tbody>
+  {% for a in approvals %}
+    <tr><td>{{ a.name }}</td><td>{{ a.decision }}</td><td class="num">{{ a.at }}</td><td>{{ a.auth }}</td><td class="num">{{ a.ip or '—' }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p class="note">{{ t.opening_note }}</p>
+
+<h2>{{ t.s_submissions }}</h2>
+<table>
+  <thead><tr><th>#</th><th>{{ t.supplier }}</th><th>{{ t.receipt }}</th><th>{{ t.submitted_at }}</th>
+    <th>{{ t.price }}</th><th>{{ t.vat }}</th><th>{{ t.total }}</th><th>{{ t.delivery }}</th><th>{{ t.warranty }}</th>
+    <th>{{ t.payment }}</th><th>{{ t.docs }}</th><th>{{ t.integrity }}</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr>
+      <td>{{ loop.index }}</td><td>{{ r.supplier }}</td><td class="num">{{ r.receipt }}</td><td class="num">{{ r.submitted_at }}</td>
+      <td class="num">{{ r.price }}</td><td class="num">{{ r.vat }}</td><td class="num">{{ r.total }}</td>
+      <td>{{ r.delivery }}</td><td>{{ r.warranty }}</td><td>{{ r.payment }}</td>
+      <td>{{ t.complete if r.docs_complete else t.incomplete }}</td><td>{{ t.ok if r.integrity_ok else t.failed_integrity }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p class="muted">{{ t.no_ranking }}</p>
+
+{% if decision %}
+<h2>{{ t.s_decision }}</h2>
+<dl>
+  <dt>{{ t.decision }}</dt><dd>{{ decision.label }}</dd>
+  <dt>{{ t.selected }}</dt><dd>{{ decision.supplier or '—' }}</dd>
+  <dt>{{ t.reason }}</dt><dd>{{ decision.reason }}</dd>
+  <dt>{{ t.decided_by }}</dt><dd>{{ decision.by }}</dd>
+  <dt>{{ t.time }}</dt><dd class="num">{{ decision.at }}</dd>
+</dl>
+{% endif %}
+
+<h2>{{ t.s_audit }}</h2>
+<dl>
+  <dt>{{ t.audit_events }}</dt><dd>{{ audit_count }}</dd>
+  <dt>{{ t.audit_head }}</dt><dd class="hash">{{ audit_head }}</dd>
+  <dt>{{ t.chain }}</dt><dd>{{ t.chain_ok if chain_valid else t.chain_broken }}</dd>
+</dl>
+
+<div class="signatures">
+  <div>{{ t.sign_1 }}</div><div>{{ t.sign_2 }}</div><div>{{ t.sign_3 }}</div>
+</div>
+
+<footer>{{ t.footer }}</footer>
+</body>
+</html>

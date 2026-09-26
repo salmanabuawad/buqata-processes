@@ -1,0 +1,276 @@
+{
+  "app": { "name": "منظومة المشتريات والتقديم الرقمي", "council": "المجلس المحلي بقعاثا" },
+  "principles": { "efficiency": "الكفاءة", "transparency": "الشفافية", "equal_opportunity": "تكافؤ الفرص", "security": "الأمان" },
+  "common": {
+    "loading": "جارٍ التحميل…", "cancel": "إلغاء", "close": "إغلاق", "save": "حفظ", "edit": "تعديل", "upload": "رفع", "yes": "نعم",
+    "language": "اللغة", "skip_to_content": "الانتقال إلى المحتوى الرئيسي", "system": "النظام"
+  },
+  "nav": {
+    "main": "القائمة الرئيسية", "dashboard": "لوحة التحكم", "processes": "الإجراءات", "new_process": "فتح إجراء جديد", "suppliers": "سجل المورّدين",
+    "audit": "سجل التدقيق", "categories": "مجالات النشاط", "users": "المستخدمون والصلاحيات", "notifications": "الإشعارات", "logout": "خروج",
+    "open_menu": "فتح القائمة", "opportunities": "الفرص والتقديمات", "company_profile": "ملف الشركة"
+  },
+  "shell": {
+    "trust_title": "قواعد أساسية",
+    "trust_body": "التوزيع على المورّدين تلقائي ولا يمكن تعديله. تُحفظ العروض مشفّرة ولا تُفتح إلا معاً، بعد الموعد ووفق السياسة. كل إجراء يُسجَّل في سجل موقَّع."
+  },
+  "auth": {
+    "sign_in": "الدخول إلى النظام", "sign_in_hint": "يدخل المورّدون وموظفو المجلس بالبريد الإلكتروني وكلمة المرور.", "email": "البريد الإلكتروني", "password": "كلمة المرور",
+    "staff_sso_note": "في بيئة الإنتاج يدخل موظفو المجلس بحساب Microsoft المؤسسي (Entra ID) مع التحقق الثنائي.",
+    "no_account": "مورّد غير مسجّل بعد؟", "register_supplier": "التسجيل في سجل المورّدين",
+    "demo_title": "دخول سريع للعرض التوضيحي", "demo_badge": "بيئة عرض", "demo_hint": "اختر مستخدماً لرؤية النظام من منظوره. هذا الخيار غير موجود في بيئة الإنتاج."
+  },
+  "kinds": { "staff": "موظف/ة في المجلس", "supplier": "مورّد", "applicant": "مقدّم/ة طلب" },
+  "roles": {
+    "system_admin": "مدير/ة النظام", "procurement_manager": "مدير/ة المشتريات", "tender_committee": "لجنة المناقصات", "scholarship_admin": "منسّق/ة المنح",
+    "scholarship_committee": "لجنة المنح", "auditor": "التدقيق / المستشار القانوني", "supplier": "مورّد", "applicant": "مقدّم/ة طلب منحة", "system": "النظام", "cli": "سطر الأوامر"
+  },
+  "landing": {
+    "kicker": "منصة واحدة لجميع إجراءات المشتريات والتقديم في المجلس",
+    "title": "من التسجيل حتى المحضر — بشفافية وأمان وتكافؤ",
+    "subtitle": "يسجّل المورّدون مرة واحدة ويتلقّون تلقائياً كل فرصة في مجالهم. تُختم العروض في خزنة رقمية وتُفتح معاً وفق السياسة، مع توثيق كامل.",
+    "cta_supplier": "التسجيل كمورّد", "cta_staff": "دخول الموظفين والمورّدين", "to_workspace": "إلى مساحة العمل",
+    "how_title": "كيف يعمل النظام",
+    "step1_title": "يسجّل المورّد ويختار مجالات نشاطه", "step1_body": "تفاصيل العمل والمستندات والمجالات — مرة واحدة.",
+    "step2_title": "ينشر المجلس طلباً", "step2_body": "يحدّد النظام جميع المورّدين المسجّلين في المجال ويرسل إليهم جميعاً — دون اختيار يدوي.",
+    "step3_title": "تُختم العروض في الخزنة", "step3_body": "كل عرض يُشفَّر ويحصل على تأكيد تقديم مع بصمة رقمية.",
+    "step4_title": "الفتح والمقارنة والقرار", "step4_body": "تُفتح جميع العروض معاً بعد الموعد، ويُوثَّق القرار ويُنتَج محضر.",
+    "principle_efficiency": "ورق أقل وزيارات أقل وعمل يدوي أقل في كل إجراء.",
+    "principle_transparency": "توزيع تلقائي وتقرير عدالة وسجل تدقيق موقَّع.",
+    "principle_equal_opportunity": "كل مورّد مسجّل في المجال يتلقى كل فرصة في اللحظة نفسها.",
+    "principle_security": "تشفير وفتح وفق السياسة وتحقّق من سلامة كل ملف.",
+    "type_rfq": "طلبات عروض الأسعار", "type_rfq_body": "توزيع تلقائي على جميع مورّدي المجال، تقديم مختوم ومقارنة.",
+    "type_tender": "المناقصات", "type_tender_body": "خزنة رقمية وفتح بموافقة عدة جهات ومن شبكة معتمدة. (قيد التطوير)",
+    "type_scholarship": "المنح الدراسية", "type_scholarship_body": "تقديم الطلبات وفحص الأهلية ولجنة مع تصريح بعدم تضارب المصالح. (قيد التطوير)",
+    "supplier_question": "هل تقدّمون خدمات للمجلس؟", "register_link": "سجّلوا في سجل المورّدين"
+  },
+  "register": {
+    "title": "التسجيل في سجل المورّدين", "subtitle": "سجّلوا مرة واحدة وتلقّوا دعوات تلقائية لكل إجراء في المجالات التي تختارونها.",
+    "fairness_title": "تكافؤ الفرص", "fairness_body": "لا يختار موظفو المجلس من يتلقى الطلب. كل مورّد نشط مسجّل في المجال يتلقى الدعوة تلقائياً.",
+    "company": "تفاصيل العمل", "contact": "جهة الاتصال والدخول", "company_number_hint": "رقم الشركة أو المشتغل المرخّص — 8 أو 9 أرقام",
+    "password_hint": "10 أحرف على الأقل", "categories": "مجالات النشاط",
+    "categories_hint": "اختيار مجال عام (مثل «حوسبة») يشمل جميع مجالاته الفرعية. اختاروا فقط المجالات التي تقدّمون فيها خدمات فعلاً.",
+    "terms": "أؤكد صحة التفاصيل وأوافق على أن يرسل المجلس إليّ إشعارات بالإجراءات في المجالات التي اخترتها.",
+    "submit": "تسجيل"
+  },
+  "supplier": {
+    "company_name": "اسم العمل", "company_number": "رقم الشركة / المشتغل", "contact_name": "جهة الاتصال", "phone": "الهاتف",
+    "address": "العنوان", "city": "البلدة", "website": "الموقع الإلكتروني", "description": "وصف العمل"
+  },
+  "supplier_status": { "ACTIVE": "نشط", "INACTIVE": "غير نشط", "SUSPENDED": "موقوف" },
+  "categories": {
+    "search": "بحث عن مجال…", "title": "مجالات النشاط", "subtitle": "شجرة المجالات تُستخدم لتسجيل المورّدين وللتوزيع التلقائي للطلبات. التغيير هنا لا يتطلب تغيير الشيفرة.",
+    "tree": "شجرة المجالات", "tree_hint": "اسم بثلاث لغات لكل مجال", "add_root": "مجال رئيسي جديد", "add_child": "مجال فرعي", "edit": "تعديل المجال",
+    "new": "مجال جديد", "key": "المعرّف", "key_hint": "أحرف لاتينية صغيرة وأرقام ونقاط. لا يمكن تغييره بعد الإنشاء.",
+    "inactive": "غير نشط", "active": "نشط", "suppliers": "{count} مورّدين"
+  },
+  "dashboard": {
+    "greeting": "مرحباً، {name}", "title": "لوحة التحكم", "title_admin": "إدارة النظام",
+    "admin_scope": "يدير مديرو النظام المستخدمين والمجالات والإعدادات. ليس لديهم وصول إلى محتوى العروض — وهذا فصل مقصود للصلاحيات.",
+    "active_rfqs": "طلبات عروض أسعار نشطة", "waiting_for_opening": "بانتظار الفتح", "submissions_today": "تقديمات اليوم",
+    "registered_suppliers": "مورّدون نشطون في السجل", "waiting_for_my_approval": "بانتظار موافقتي", "active_tenders": "مناقصات نشطة",
+    "coming_phase": "المرحلة {phase}", "expiring_documents": "مستندات مورّدين منتهية / قاربت على الانتهاء", "within_30_days": "خلال 30 يوماً",
+    "security_alerts": "تنبيهات أمنية", "last_30_days": "آخر 30 يوماً",
+    "participation": "مشاركة المورّدين في طلبات عروض الأسعار", "participation_hint": "المدعوون مقابل المقدِّمين. عدد المقدِّمين يُكشف فقط بعد الفتح.",
+    "legend_invited": "دُعوا", "legend_submitted": "قدّموا", "sealed_until_opening": "مختوم حتى الفتح", "no_rfqs": "لا توجد طلبات منشورة بعد",
+    "avg_reached": "متوسط المورّدين المدعوين", "avg_received": "متوسط العروض المستلمة", "by_status": "الإجراءات حسب الحالة",
+    "delivery": "تسليم رسائل البريد", "measured": "بيانات مقيسة", "recent_activity": "النشاط الأخير"
+  },
+  "processes": {
+    "title": "الإجراءات", "subtitle": "جميع إجراءات المشتريات والتقديم في المجلس", "search": "بحث بالاسم أو الرقم…", "status_filter": "تصفية حسب الحالة",
+    "all_statuses": "كل الحالات", "empty": "لم يتم العثور على إجراءات", "reference": "الرقم", "name": "الإجراء", "type": "النوع", "status": "الحالة",
+    "deadline": "الموعد الأخير", "invited": "المدعوون", "submissions": "العروض"
+  },
+  "types": {
+    "rfq": "طلب عرض أسعار", "tender": "مناقصة", "scholarship": "منحة", "call_for_proposals": "دعوة لتقديم مقترحات", "support": "دعم", "recruitment": "توظيف"
+  },
+  "status": { "DRAFT": "مسودة", "PUBLISHED": "منشور", "OPENED": "مفتوح", "DECIDED": "تقرّر", "CLOSED": "مغلق", "CANCELLED": "ملغى" },
+  "phase": {
+    "draft": "مسودة", "submission_open": "مفتوح للتقديم", "awaiting_opening": "بانتظار الفتح", "evaluation": "قيد الفحص", "decided": "صدر قرار",
+    "closed": "مغلق", "cancelled": "ملغى"
+  },
+  "new": {
+    "title": "فتح إجراء جديد", "subtitle": "اختر نوع الإجراء. كل نوع يحمّل مسار العمل والقواعد الخاصة به.",
+    "title_rfq": "طلب عرض أسعار جديد", "subtitle_rfq": "اختر المجال — وسيرسل النظام الطلب إلى جميع المورّدين المسجّلين فيه.",
+    "change_type": "تغيير نوع الإجراء", "coming_phase": "قيد التطوير · المرحلة {phase}", "planned": "مخطَّط",
+    "desc_rfq": "توزيع تلقائي على جميع مورّدي المجال، عروض مختومة، مقارنة وقرار.",
+    "desc_tender": "خزنة رقمية، فتح بموافقة 3 من 5، شبكة وجهاز معتمدان.",
+    "desc_scholarship": "تقديم الطلبات، فحص الأهلية، التقييم واللجنة.",
+    "desc_call_for_proposals": "دعوات لتقديم مقترحات ومنح دعم — على البنية نفسها.",
+    "desc_support": "طلبات دعم للجمعيات والهيئات.", "desc_recruitment": "إجراءات توظيف ووظائف.",
+    "section_request": "تفاصيل الطلب", "section_schedule": "المواعيد وجهة الاتصال", "section_categories": "مجالات الطلب",
+    "categories_hint": "سيُرسل الطلب إلى كل مورّد نشط مسجّل في هذه المجالات وفي مجالاتها العامة والفرعية.",
+    "matching_title": "المورّدون المسجّلون الذين سيتلقّون الطلب", "matching_sentence": "{count} مورّدين مسجّلين يطابقون هذا الطلب.",
+    "matching_empty": "اختر مجالاً لترى عدد المورّدين الذين سيتلقّون الطلب.",
+    "fairness_rule": "لا يستطيع موظفو المجلس إضافة مورّد إلى القائمة أو إزالته منها. يُحدَّد التوزيع تلقائياً ويُحفظ كلقطة موقَّعة.",
+    "show_list": "عرض القائمة", "hide_list": "إخفاء القائمة", "list_read_only": "للعرض فقط — لا يمكن تعديل القائمة.",
+    "publish": "نشر وإرسال إلى المورّدين", "publish_now": "النشر الآن", "save_draft": "حفظ كمسودة",
+    "publish_confirm": "سيُثبَّت الطلب كنسخة منشورة ويُرسل الآن إلى {count} مورّدين. لا يمكن تعديله بعد النشر."
+  },
+  "rfq": {
+    "title": "عنوان الطلب", "title_placeholder": "مثال: شراء 20 حاسوباً مكتبياً", "description": "الوصف", "quantity": "الكمية", "unit": "وحدة القياس",
+    "technical_specification": "المواصفات الفنية", "additional_requirements": "متطلبات إضافية", "attachments": "المرفقات",
+    "attachments_hint": "مواصفات وملاحق (PDF، Word، Excel). تُعرض على المورّدين المدعوين.",
+    "deadline": "الموعد الأخير للتقديم", "deadline_hint": "بتوقيت إسرائيل. يرفض الخادم أي تقديم بعد هذا الموعد.",
+    "expected_delivery": "موعد التوريد المتوقع", "contact_name": "جهة الاتصال", "contact_email": "بريد التواصل", "contact_phone": "الهاتف"
+  },
+  "process": {
+    "timeline": "مراحل الإجراء", "tab_overview": "التفاصيل", "tab_distribution": "التوزيع والعدالة", "tab_opening": "الخزنة والفتح",
+    "tab_evaluation": "المقارنة والقرار", "tab_protocols": "المحاضر", "tab_audit": "سجل التدقيق",
+    "request_details": "تفاصيل الطلب", "categories": "المجالات", "published_at": "نُشر", "created_by": "أنشأه",
+    "documents": "مستندات الإجراء", "no_documents": "لا توجد مستندات مرفقة", "contact": "جهة الاتصال",
+    "participants": "المشاركون في الإجراء", "participants_hint": "المشاركون فقط يحق لهم الوصول إلى المحتوى بعد الفتح",
+    "publish": "نشر", "publish_confirm": "ستُثبَّت النسخة وتُرسل تلقائياً إلى جميع المورّدين المسجّلين في مجالات الإجراء. لا يمكن التعديل بعد النشر.",
+    "cancelled": "تم إلغاء الإجراء"
+  },
+  "participation": { "OWNER": "المسؤول/ة", "TEAM": "الفريق", "COMMITTEE": "اللجنة", "OPENING_OFFICIAL": "مخوَّل بالفتح", "CONTENT_ACCESS": "صلاحية اطلاع خاصة" },
+  "timeline": {
+    "draft": "مسودة", "published": "نُشر", "notified": "إشعار المورّدين", "submission": "تقديم العروض", "deadline": "الموعد الأخير",
+    "opening": "الفتح", "evaluation": "الفحص", "decision": "القرار", "closed": "الإغلاق", "cancelled": "ملغى"
+  },
+  "fairness": {
+    "not_published": "لم يُنشر الإجراء بعد", "not_published_body": "تُحدَّد قائمة التوزيع لحظة النشر.",
+    "banner_title": "تم تحديد التوزيع تلقائياً", "banner_body": "دُعي كل مورّد نشط مسجّل في مجالات الإجراء. لم يُجرَ أي اختيار يدوي، ولا يمكن تغيير القائمة.",
+    "eligible": "مورّدون مؤهَّلون", "notifications": "إشعارات أُنشئت", "delivered": "سُلّمت", "failed": "فشلت", "opened": "فتحوا الدعوة",
+    "started": "بدؤوا التقديم", "submitted": "قدّموا",
+    "snapshots": "لقطات التوزيع", "snapshots_hint": "كل لقطة مختومة ببصمة SHA-256. يُضاف المورّدون المسجّلون بعد النشر في لقطة تكميلية.",
+    "snapshot_kind": "النوع", "created": "أُنشئت", "recipients": "المستلمون", "kind_INITIAL": "توزيع أوّلي", "kind_SUPPLEMENTAL": "توزيع تكميلي",
+    "recipients_title": "المورّدون المدعوون", "submitted_hidden": "من قدّم — يُكشف فقط بعد فتح الخزنة.",
+    "supplier": "المورّد", "match_reason": "سبب المطابقة", "delivery": "التسليم", "hidden": "سرّي حتى الفتح"
+  },
+  "match": { "exact": "المجال نفسه", "supplier_broader": "مجال عام", "supplier_narrower": "مجال فرعي" },
+  "delivery": { "SENT": "سُلّم", "PENDING": "في الانتظار", "FAILED": "فشل، ستُعاد المحاولة", "DEAD": "فشل", "NO_EMAIL": "بلا بريد", "NONE": "—" },
+  "opening": {
+    "not_published": "لم يُنشر الإجراء بعد — لا توجد خزنة حتى الآن.",
+    "sealed_count": "{count} عروض مختومة", "opened_count": "فُتحت {count} عروض",
+    "sealed_body": "العروض مشفّرة. لا يستطيع أحد — بمن في ذلك مديرو النظام — رؤية سعر أو مستند قبل الفتح.",
+    "opened_body": "فُتحت الخزنة في {at}. فُتحت جميع العروض معاً.",
+    "opening_time": "موعد الفتح", "policy_title": "سياسة الفتح", "policy_hint": "يُجرى الفحص في الخادم، لك، الآن",
+    "approvals": "الموافقات", "decision_APPROVE": "وافق/ت", "decision_REJECT": "رفض/ت",
+    "open_button": "فتح الخزنة", "confirm": "ستُفتح جميع العروض الـ{count} معاً، ويُتحقق من سلامة كل ملف، ويتلقى جميع المقدِّمين إشعاراً بالفتح. لا يمكن التراجع عن ذلك.",
+    "confirm_button": "الفتح الآن", "no_permission": "ليست لديك صلاحية لفتح هذا الإجراء.",
+    "early_warning": "أي محاولة فتح قبل الموعد تُرفض وتُسجَّل كحدث أمني.",
+    "result_title": "فُتحت الخزنة", "result_body": "فُتحت {count} عروض · تم التحقق من {files} ملفات · إخفاقات السلامة: {failures}"
+  },
+  "policy": { "time": "حلّ موعد الفتح", "network": "شبكة المجلس", "device": "جهاز مُدار", "identity": "الهوية والتحقق", "role": "الدور والمشاركة في الإجراء", "multi_approval": "الموافقات المطلوبة" },
+  "policy_code": {
+    "opening_time_reached": "انقضى الموعد", "before_opening_time": "لم يحلّ موعد الفتح بعد", "inside_allowed_network": "الطلب من شبكة معتمدة",
+    "outside_allowed_network": "الطلب ليس من شبكة المجلس", "client_ip_unknown": "عنوان الشبكة غير معروف", "client_ip_invalid": "عنوان شبكة غير صالح",
+    "managed_device": "جهاز مُدار وسليم", "unmanaged_device": "الجهاز غير مُدار", "account_inactive": "الحساب غير نشط",
+    "mfa_required": "مطلوب تحقق ثنائي", "identity_ok": "تم التحقق من الهوية", "missing_permission": "صلاحية ناقصة", "not_a_participant": "لست مشاركاً في الإجراء",
+    "role_ok": "الدور مناسب", "approval_rejected": "رفض أحد المصادِقين", "approvals_satisfied": "{approved} من {required} موافقات",
+    "awaiting_approvals": "{approved} من {required} موافقات — بالانتظار"
+  },
+  "evaluation": {
+    "sealed_title": "العروض ما زالت مختومة", "sealed_body": "يظهر جدول المقارنة فقط بعد فتح الخزنة.",
+    "no_access": "لا وصول إلى محتوى العروض", "no_access_body": "الاطلاع على المحتوى مسموح للمشاركين في الإجراء فقط، أو بصلاحية صريحة ومعلَّلة من المسؤول.",
+    "no_winner_title": "النظام لا يحدّد فائزاً", "no_winner_body": "يعرض الجدول البيانات كما قُدّمت. يمكن الفرز، لكن القرار بيد أصحاب الصلاحية في المجلس.",
+    "comparison": "جدول المقارنة", "comparison_hint": "{count} عروض · كل اطلاع يُسجَّل",
+    "supplier": "المورّد", "price": "السعر قبل الضريبة", "vat": "الضريبة", "total": "المجموع", "delivery": "التوريد", "warranty": "الضمان",
+    "payment": "شروط الدفع", "documents": "المستندات", "days": "{n} أيام", "months": "{n} أشهر",
+    "docs_complete": "المستندات كاملة", "docs_missing": "مستندات ناقصة", "integrity_failed": "فشل السلامة", "cert_expired": "شهادة منتهية",
+    "record_decision": "تسجيل قرار", "decision_type": "نوع القرار", "type_AWARD": "اختيار مورّد", "type_NO_AWARD": "دون اختيار",
+    "selected": "المورّد المختار", "choose_supplier": "اختر مورّداً…", "reason": "التعليل", "reason_hint": "يُحفظ في المحضر والسجل (10 أحرف على الأقل).",
+    "save_decision": "حفظ القرار", "decision_note": "يُسجَّل القرار باسمك مع الوقت والتعليل، ويُبلَّغ جميع المقدِّمين بصدور قرار.",
+    "decision_recorded": "القرار", "decided_by": "متخذ القرار", "decided_at": "الوقت"
+  },
+  "protocols": {
+    "language": "لغة المحضر", "generate": "إصدار محضر", "close_process": "إغلاق الإجراء",
+    "hint": "يشمل المحضر التوزيع والفتح والمقارنة والقرار ورأس سلسلة سجل التدقيق. تُحفظ بصمة المستند في السجل.",
+    "not_yet": "يمكن إصدار المحضر بعد فتح الخزنة.", "type": "النوع", "generated": "أُصدر", "fingerprint": "البصمة", "open": "فتح للطباعة",
+    "type_rfq_opening": "محضر الفتح", "type_rfq_decision": "محضر الفتح والقرار"
+  },
+  "docs": { "proposal": "عرض السعر", "technical_spec": "المواصفات الفنية", "supporting": "مستند إضافي" },
+  "doc_types": { "bookkeeping": "شهادة إدارة حسابات", "tax_withholding": "شهادة خصم ضريبة من المصدر", "insurance": "شهادة تأمين", "iso": "معيار ISO", "other": "أخرى" },
+  "supplier_home": {
+    "title": "الفرص الخاصة بي", "subtitle": "إجراءات أُرسلت إليكم تلقائياً حسب مجالات النشاط التي اخترتموها.",
+    "welcome_title": "تم تسجيلكم بنجاح", "welcome_body": "من الآن ستتلقّون تلقائياً كل طلب في مجالاتكم. يمكن تحديث المجالات والمستندات في ملف الشركة.",
+    "empty": "لم تصل دعوات بعد", "empty_body": "عندما ينشر المجلس إجراءً في مجالكم سيظهر هنا وستتلقّون إشعاراً.",
+    "open": "مفتوح للتقديم", "submitted": "قُدّم", "deadline": "الموعد الأخير", "view_receipt": "عرض تأكيد التقديم", "submit_offer": "لتقديم عرض",
+    "my_submission": "تقديمي", "sealed": "قُدّم وخُتم", "opened": "فُتح", "started": "بدأ"
+  },
+  "submit": {
+    "title": "تقديم عرض", "new_version": "تقديم نسخة محدَّثة", "subtitle": "تُشفَّر الأسعار والملفات لحظة التقديم.",
+    "price": "السعر قبل الضريبة (₪)", "price_hint": "تُحتسب الضريبة والمجموع تلقائياً", "vat": "ضريبة القيمة المضافة ({rate}%)", "total": "المجموع شامل الضريبة",
+    "delivery_days": "مدة التوريد (أيام)", "warranty_months": "الضمان (أشهر)", "payment_terms": "شروط الدفع", "payment_placeholder": "مثال: جاري + 30",
+    "notes": "ملاحظات", "documents": "المستندات", "required": "إلزامي", "optional": "اختياري",
+    "seal_note_title": "سيُختم العرض في الخزنة", "seal_note_body": "لن يتمكن أحد في المجلس — بمن في ذلك مديرو النظام — من رؤية العرض حتى الفتح المشترك بعد الموعد الأخير.",
+    "submit": "تقديم وختم", "confirm": "تقديم عرض بقيمة {total} شامل الضريبة؟ حتى الموعد الأخير يمكن تقديم نسخة جديدة تحلّ محل السابقة.",
+    "confirm_button": "تقديم نهائي",
+    "receipt_title": "تأكيد التقديم", "receipt_hint": "احتفظوا بهذا التأكيد. البصمات تثبت ما قُدّم ومتى.", "print": "طباعة",
+    "reference": "الإجراء", "receipt_number": "رقم التأكيد", "submitted_at": "وقت التقديم", "version": "النسخة", "receipt_hash": "بصمة التأكيد",
+    "sealed_title": "العرض مختوم", "sealed_body": "لن يُفتح العرض إلا بعد الموعد الأخير، مع جميع العروض الأخرى، وستتلقّون إشعاراً بالفتح.",
+    "replace_hint": "حتى الموعد الأخير يمكن تقديم نسخة محدَّثة. تُفتح النسخة الأخيرة فقط.", "replace": "تقديم نسخة جديدة",
+    "closed_title": "أُغلق التقديم", "closed_body": "انقضى الموعد الأخير للتقديم.",
+    "opened_title": "فُتحت الخزنة", "opened_body": "فُتحت العروض معاً بعد الموعد الأخير. ستتلقّون إشعاراً عند تسجيل قرار.",
+    "request": "تفاصيل الطلب", "fair_title": "وصلتكم هذه الدعوة تلقائياً",
+    "fair_body": "تلقّاها جميع المورّدين المسجّلين في المجال في الوقت نفسه تماماً. لا يختار موظفو المجلس من تُرسل إليه."
+  },
+  "profile": {
+    "title": "ملف الشركة", "subtitle": "تفاصيلكم ومجالاتكم وشهاداتكم في سجل المورّدين.", "saved": "تم حفظ التفاصيل",
+    "categories_saved": "تم تحديث المجالات", "categories_saved_invites": "تم تحديث المجالات — أُضيفت {count} دعوات لإجراءات مفتوحة",
+    "number_locked": "لا يمكن تغيير رقم الشركة بعد التسجيل", "notifications": "تلقّي الإشعارات", "notify_email": "بالبريد الإلكتروني", "notify_in_app": "في النظام",
+    "categories_hint": "تغيير المجالات يدعوكم تلقائياً أيضاً إلى الإجراءات المفتوحة المطابقة",
+    "certificates": "الشهادات والمستندات", "certificates_hint": "تُعرض على اللجنة بجانب كل عرض، مع الصلاحية", "add_certificate": "إضافة شهادة",
+    "no_certificates": "لم تُرفع شهادات", "doc_title": "المستند", "doc_type": "النوع", "issued": "تاريخ الإصدار", "expires": "صالح حتى",
+    "expired": "منتهية الصلاحية", "valid": "سارية", "file": "الملف"
+  },
+  "registry": {
+    "title": "سجل المورّدين", "subtitle": "مورّدون سجّلوا بأنفسهم واختاروا مجالات نشاطهم. التوزيع على الإجراءات مشتق من هذا التسجيل فقط.",
+    "search": "بحث بالاسم أو الرقم أو البلدة…", "category_filter": "تصفية حسب المجال", "all_categories": "كل المجالات", "count": "{count} مورّدين",
+    "empty": "لم يتم العثور على مورّدين", "categories": "المجالات", "registered": "سُجّل", "status": "الحالة", "expired_docs": "{count} شهادات منتهية"
+  },
+  "audit": {
+    "title": "سجل التدقيق", "subtitle": "كل إجراء مهم يُكتب كسجل موقَّع ومتسلسل. أي تغيير في سجل سابق يُكتشف عند التحقق من السلسلة.",
+    "verify": "التحقق من سلسلة السجل", "valid": "السلسلة سليمة — تم فحص {count} أحداث", "broken": "تم اكتشاف خلل في السلسلة عند السجل {seq}",
+    "events": "الأحداث", "events_hint": "انقر على صف لعرض التفاصيل والبصمات", "severity": "الخطورة", "all_severities": "كل مستويات الخطورة",
+    "critical": "حرج", "warning": "تحذير", "info": "معلومة", "time": "الوقت", "event": "الحدث", "process": "الإجراء", "actor": "المنفّذ", "hash": "البصمة",
+    "verify_only": "يسمح دورك بالتحقق من سلامة السلسلة فقط، دون الاطلاع على محتوى الأحداث."
+  },
+  "events": {
+    "PROCESS_CREATED": "أُنشئ إجراء", "PROCESS_UPDATED": "حُدّث إجراء", "PROCESS_PUBLISHED": "نُشر إجراء", "PROCESS_CANCELLED": "أُلغي إجراء", "PROCESS_CLOSED": "أُغلق إجراء",
+    "SUPPLIERS_MATCHED": "تم تحديد المورّدين تلقائياً", "NOTIFICATIONS_QUEUED": "أُدرجت الإشعارات للإرسال", "NOTIFICATION_SENT": "سُلّم إشعار", "NOTIFICATION_FAILED": "فشل تسليم إشعار",
+    "VAULT_CREATED": "أُنشئت خزنة", "SUBMISSION_STARTED": "بدأ مورّد التقديم", "SUBMISSION_CREATED": "قُدّم عرض", "SUBMISSION_UPDATED": "قُدّمت نسخة جديدة",
+    "SUBMISSION_SEALED": "خُتم عرض", "FILE_UPLOADED": "رُفع ملف", "DEADLINE_REACHED": "حلّ الموعد الأخير", "OPENING_REQUESTED": "طُلب الفتح",
+    "OPENING_APPROVED": "تمت الموافقة على الفتح", "OPENING_REJECTED": "رُفض الفتح", "VAULT_OPENED": "فُتحت الخزنة", "PROPOSAL_VIEWED": "اطلاع على عرض",
+    "PROPOSAL_DOWNLOADED": "تنزيل مستند عرض", "DECISION_RECORDED": "سُجّل قرار", "PROTOCOL_GENERATED": "أُصدر محضر", "PROTOCOL_VIEWED": "اطلاع على محضر",
+    "EARLY_OPEN_ATTEMPT": "محاولة فتح مبكرة", "UNAUTHORIZED_NETWORK_ATTEMPT": "محاولة من شبكة غير مخوّلة", "UNAUTHORIZED_DEVICE_ATTEMPT": "محاولة من جهاز غير مخوّل",
+    "FAILED_MULTI_APPROVAL": "فشل الموافقة المتعددة", "SEALED_ACCESS_DENIED": "محاولة وصول إلى عرض مختوم", "FILE_INTEGRITY_FAILURE": "فشل سلامة ملف",
+    "USER_REGISTERED": "سجّل مستخدم", "SUPPLIER_REGISTERED": "سجّل مورّد", "SUPPLIER_UPDATED": "حُدّثت تفاصيل مورّد", "SUPPLIER_CATEGORY_CHANGED": "حُدّثت مجالات مورّد",
+    "SUPPLIER_DOCUMENT_UPLOADED": "رُفعت شهادة مورّد", "SUPPLIER_STATUS_CHANGED": "تغيّرت حالة مورّد", "USER_LOGGED_IN": "دخول إلى النظام", "USER_LOGGED_OUT": "خروج",
+    "LOGIN_FAILED": "فشل الدخول", "ROLE_GRANTED": "مُنحت صلاحية", "ROLE_REVOKED": "أُلغيت صلاحية", "SELF_GRANT_BLOCKED": "مُنعت محاولة منح ذاتي",
+    "USER_CREATED": "أُنشئ مستخدم", "USER_ACTIVATED": "فُعّل مستخدم", "USER_DEACTIVATED": "عُطّل مستخدم", "CATEGORY_CREATED": "أُنشئ مجال", "CATEGORY_UPDATED": "حُدّث مجال",
+    "INVITATION_OPENED": "فُتحت دعوة", "AUDIT_CHAIN_VERIFIED": "تم التحقق من سلسلة السجل", "CONTENT_ACCESS_GRANTED": "مُنحت صلاحية اطلاع", "PARTICIPANT_ADDED": "أُضيف مشارك",
+    "USER_PROFILE_UPDATED": "حُدّث الملف الشخصي"
+  },
+  "users": {
+    "title": "المستخدمون والصلاحيات", "subtitle": "موظفو المجلس والأدوار وفصل الصلاحيات.", "add": "مستخدم جديد",
+    "sod_title": "فصل الصلاحيات", "sod_body": "لا يمكن منح صلاحية لنفسك. كل منح لدور عملي يُسجَّل ويُبلَّغ لجهات التدقيق. مدير النظام لا يحصل على وصول إلى العروض.",
+    "kind": "نوع المستخدم", "name": "الاسم", "roles": "الأدوار", "last_login": "آخر دخول", "you": "أنت",
+    "grant": "منح دور", "grant_title": "منح دور لـ{name}", "revoke": "إلغاء الدور", "role": "الدور", "reason": "التعليل",
+    "reason_hint": "يُحفظ في سجل التدقيق", "business_alert": "هذا دور عملي — ستتلقى جهات التدقيق تنبيهاً بالمنح.",
+    "activate": "تفعيل", "deactivate": "تعطيل", "password_hint": "اتركه فارغاً لمستخدم يدخل عبر Entra ID"
+  },
+  "notifications": { "empty": "لا توجد إشعارات", "mark_all": "تعليم الكل كمقروء" },
+  "invite": {
+    "kicker": "دعوة لتقديم عرض", "body": "أُرسلت هذه الدعوة تلقائياً إلى جميع المورّدين المسجّلين في المجال. ادخلوا لعرض الطلب وتقديم عرض.",
+    "continue": "الدخول والمتابعة", "invalid": "رابط الدعوة غير صالح"
+  },
+  "errors": {
+    "generic": "حدث خطأ. حاولوا مرة أخرى.", "http_500": "خطأ في الخادم. حاولوا بعد قليل.", "invalid_credentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+    "rate_limited": "محاولات كثيرة جداً. حاولوا بعد بضع دقائق.", "not_authenticated": "يجب الدخول من جديد", "forbidden": "ليست لديك صلاحية لهذا الإجراء",
+    "csrf_failed": "انتهت صلاحية النموذج. حدّثوا الصفحة وحاولوا مجدداً.", "not_found": "العنصر غير موجود أو ليس لديك وصول إليه", "validation_error": "بعض الحقول غير صالحة",
+    "email_taken": "البريد الإلكتروني مسجّل مسبقاً", "company_number_taken": "رقم الشركة مسجّل مسبقاً في السجل", "category_required": "يجب اختيار مجال واحد على الأقل",
+    "unknown_category": "المجال غير موجود أو غير نشط", "deadline_passed": "انقضى الموعد الأخير للتقديم", "not_accepting_submissions": "الإجراء لا يستقبل تقديمات",
+    "not_invited": "عملكم ليس ضمن قائمة التوزيع لهذا الإجراء", "missing_documents": "مستندات إلزامية ناقصة", "file_type_not_allowed": "نوع الملف غير مسموح",
+    "file_too_large": "الملف كبير جداً", "file_empty": "الملف فارغ", "file_content_mismatch": "محتوى الملف لا يطابق نوعه",
+    "file_rejected_by_scanner": "حُجب الملف في الفحص الأمني", "too_many_files": "ملفات كثيرة جداً", "unknown_document_kind": "نوع مستند غير معروف",
+    "vault_sealed": "العروض مختومة حتى الفتح", "opening_policy_failed": "سياسة الفتح غير متحققة", "not_a_participant": "لست مشاركاً في هذا الإجراء",
+    "invalid_transition": "لا يمكن تنفيذ الإجراء في المرحلة الحالية", "not_publishable": "لا يمكن النشر بعد", "deadline_in_past": "الموعد الأخير قد انقضى",
+    "title_required": "العنوان مطلوب", "reason_required": "التعليل مطلوب", "protocol_required": "يجب إصدار المحضر قبل الإغلاق",
+    "file_integrity_failure": "فشل الملف في التحقق من السلامة وحُجب", "self_grant_forbidden": "لا يمكن منح دور لنفسك", "role_already_granted": "الدور ممنوح مسبقاً",
+    "opening_already_requested": "يوجد طلب فتح قيد الانتظار", "not_editable": "لا يمكن التعديل بعد النشر", "reference_taken": "رقم الإجراء موجود مسبقاً",
+    "process_type_unavailable": "نوع الإجراء هذا غير متاح بعد", "timezone_required": "موعد غير صالح", "opening_before_deadline": "موعد الفتح قبل الموعد الأخير",
+    "invalid_submission": "العرض المختار غير صالح", "submission_required": "يجب اختيار عرض", "self_change_forbidden": "لا يمكن تغيير حسابك"
+  }
+}

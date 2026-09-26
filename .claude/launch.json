@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "api",
+      "runtimeExecutable": "D:/KortexDigital/projects/buqata-processes/backend/.venv/Scripts/python.exe",
+      "runtimeArgs": ["-m", "uvicorn", "app.main:app", "--app-dir", "D:/KortexDigital/projects/buqata-processes/backend", "--port", "8000"],
+      "cwd": "D:/KortexDigital/projects/buqata-processes/backend",
+      "port": 8000
+    },
+    {
+      "name": "web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "D:/KortexDigital/projects/buqata-processes/frontend", "run", "dev"],
+      "cwd": "D:/KortexDigital/projects/buqata-processes/frontend",
+      "port": 3000
+    }
+  ]
+}

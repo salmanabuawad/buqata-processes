@@ -1,0 +1,20 @@
+[Unit]
+Description=Buq'ata Digital Processes notification and deadline worker
+After=network.target postgresql.service
+
+[Service]
+User=buqata-processes
+Group=buqata-processes
+WorkingDirectory=/opt/buqata-processes/backend
+EnvironmentFile=/opt/buqata-processes/.env
+ExecStart=/opt/buqata-processes/venv/bin/python -m app.worker
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/buqata-processes/storage /opt/buqata-processes/outbox
+
+[Install]
+WantedBy=multi-user.target

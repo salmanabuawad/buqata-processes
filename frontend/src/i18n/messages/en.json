@@ -1,0 +1,276 @@
+{
+  "app": { "name": "Digital Procurement & Submissions", "council": "Buq'ata Local Council" },
+  "principles": { "efficiency": "Efficiency", "transparency": "Transparency", "equal_opportunity": "Equal opportunity", "security": "Security" },
+  "common": {
+    "loading": "Loading…", "cancel": "Cancel", "close": "Close", "save": "Save", "edit": "Edit", "upload": "Upload", "yes": "Yes",
+    "language": "Language", "skip_to_content": "Skip to main content", "system": "System"
+  },
+  "nav": {
+    "main": "Main menu", "dashboard": "Dashboard", "processes": "Processes", "new_process": "New process", "suppliers": "Supplier registry",
+    "audit": "Audit trail", "categories": "Business categories", "users": "Users & roles", "notifications": "Notifications", "logout": "Sign out",
+    "open_menu": "Open menu", "opportunities": "Opportunities & submissions", "company_profile": "Company profile"
+  },
+  "shell": {
+    "trust_title": "Ground rules",
+    "trust_body": "Supplier distribution is automatic and cannot be edited. Offers are stored encrypted and opened only together, after the deadline and under policy. Every action is written to a signed log."
+  },
+  "auth": {
+    "sign_in": "Sign in", "sign_in_hint": "Suppliers and council staff sign in with their e-mail and password.", "email": "E-mail", "password": "Password",
+    "staff_sso_note": "In production, council staff sign in with their organisational Microsoft account (Entra ID) and multi-factor authentication.",
+    "no_account": "Supplier not yet registered?", "register_supplier": "Join the supplier registry",
+    "demo_title": "Quick demo sign-in", "demo_badge": "Demo environment", "demo_hint": "Pick a user to see the system from their point of view. This option does not exist in production."
+  },
+  "kinds": { "staff": "Council staff", "supplier": "Supplier", "applicant": "Applicant" },
+  "roles": {
+    "system_admin": "System administrator", "procurement_manager": "Procurement manager", "tender_committee": "Tender committee", "scholarship_admin": "Scholarship administrator",
+    "scholarship_committee": "Scholarship committee", "auditor": "Auditor / legal", "supplier": "Supplier", "applicant": "Scholarship applicant", "system": "System", "cli": "Command line"
+  },
+  "landing": {
+    "kicker": "One platform for every council procurement and submission process",
+    "title": "From registration to protocol — transparent, secure and fair",
+    "subtitle": "Suppliers register once and automatically receive every opportunity in their field. Offers are sealed in a digital vault and opened together, under policy, with a full record.",
+    "cta_supplier": "Register as a supplier", "cta_staff": "Staff & supplier sign-in", "to_workspace": "Go to workspace",
+    "how_title": "How it works",
+    "step1_title": "Suppliers register and choose their fields", "step1_body": "Business details, documents and categories — once.",
+    "step2_title": "The council publishes a request", "step2_body": "The system finds every supplier registered in the field and sends to all of them — no manual selection.",
+    "step3_title": "Offers are sealed in the vault", "step3_body": "Each offer is encrypted and receives a submission receipt with a fingerprint.",
+    "step4_title": "Opening, comparison and decision", "step4_body": "All offers open together after the deadline; the decision is recorded and a protocol is produced.",
+    "principle_efficiency": "Less paper, fewer office visits and less manual work in every process.",
+    "principle_transparency": "Automatic distribution, a fairness report and a signed audit trail.",
+    "principle_equal_opportunity": "Every registered supplier in the field receives every opportunity, at the same moment.",
+    "principle_security": "Encryption, policy-based opening and integrity checks on every file.",
+    "type_rfq": "Requests for quotation", "type_rfq_body": "Automatic distribution to every supplier in the field, sealed submissions and comparison.",
+    "type_tender": "Tenders", "type_tender_body": "Digital vault, opening with multiple approvals from an approved network. (In development)",
+    "type_scholarship": "Scholarships", "type_scholarship_body": "Applications, eligibility checks and a committee with conflict-of-interest declarations. (In development)",
+    "supplier_question": "Do you provide services to the council?", "register_link": "Join the supplier registry"
+  },
+  "register": {
+    "title": "Join the supplier registry", "subtitle": "Register once and receive automatic invitations to every process in the categories you choose.",
+    "fairness_title": "Equal opportunity", "fairness_body": "Council staff do not choose who receives a request. Every active supplier registered in the category is invited automatically.",
+    "company": "Business details", "contact": "Contact person and sign-in", "company_number_hint": "Company or licensed dealer number — 8 or 9 digits",
+    "password_hint": "At least 10 characters", "categories": "Business categories",
+    "categories_hint": "Choosing a parent category (e.g. 'IT & computing') covers all of its sub-categories. Only choose categories you actually serve.",
+    "terms": "I confirm the details are correct and agree that the council will notify me about processes in the categories I chose.",
+    "submit": "Register"
+  },
+  "supplier": {
+    "company_name": "Business name", "company_number": "Company number", "contact_name": "Contact person", "phone": "Phone",
+    "address": "Address", "city": "Town", "website": "Website", "description": "About the business"
+  },
+  "supplier_status": { "ACTIVE": "Active", "INACTIVE": "Inactive", "SUSPENDED": "Suspended" },
+  "categories": {
+    "search": "Search categories…", "title": "Business categories", "subtitle": "The category tree drives supplier registration and automatic distribution. Changes here need no code changes.",
+    "tree": "Category tree", "tree_hint": "Three languages per category", "add_root": "New top-level category", "add_child": "Sub-category", "edit": "Edit category",
+    "new": "New category", "key": "Key", "key_hint": "Lowercase Latin letters, digits and dots. Cannot be changed later.",
+    "inactive": "Inactive", "active": "Active", "suppliers": "{count} suppliers"
+  },
+  "dashboard": {
+    "greeting": "Hello, {name}", "title": "Dashboard", "title_admin": "System administration",
+    "admin_scope": "System administrators manage users, categories and configuration. They have no access to offer content — a deliberate separation of duties.",
+    "active_rfqs": "Active requests for quotation", "waiting_for_opening": "Waiting for opening", "submissions_today": "Submissions today",
+    "registered_suppliers": "Active registered suppliers", "waiting_for_my_approval": "Waiting for my approval", "active_tenders": "Active tenders",
+    "coming_phase": "Phase {phase}", "expiring_documents": "Supplier documents expired / expiring", "within_30_days": "Within 30 days",
+    "security_alerts": "Security alerts", "last_30_days": "Last 30 days",
+    "participation": "Supplier participation in RFQs", "participation_hint": "Invited versus submitted. The number submitted is revealed only after opening.",
+    "legend_invited": "Invited", "legend_submitted": "Submitted", "sealed_until_opening": "Sealed until opening", "no_rfqs": "No published requests yet",
+    "avg_reached": "Average suppliers invited", "avg_received": "Average offers received", "by_status": "Processes by status",
+    "delivery": "E-mail delivery", "measured": "Measured data", "recent_activity": "Recent activity"
+  },
+  "processes": {
+    "title": "Processes", "subtitle": "All council procurement and submission processes", "search": "Search by name or number…", "status_filter": "Filter by status",
+    "all_statuses": "All statuses", "empty": "No processes found", "reference": "Number", "name": "Process", "type": "Type", "status": "Status",
+    "deadline": "Deadline", "invited": "Invited", "submissions": "Offers"
+  },
+  "types": {
+    "rfq": "Request for quotation", "tender": "Tender", "scholarship": "Scholarship", "call_for_proposals": "Call for proposals", "support": "Support grant", "recruitment": "Recruitment"
+  },
+  "status": { "DRAFT": "Draft", "PUBLISHED": "Published", "OPENED": "Opened", "DECIDED": "Decided", "CLOSED": "Closed", "CANCELLED": "Cancelled" },
+  "phase": {
+    "draft": "Draft", "submission_open": "Open for submissions", "awaiting_opening": "Awaiting opening", "evaluation": "Under evaluation", "decided": "Decision recorded",
+    "closed": "Closed", "cancelled": "Cancelled"
+  },
+  "new": {
+    "title": "New process", "subtitle": "Choose the process type. Each type loads its own workflow and rules.",
+    "title_rfq": "New request for quotation", "subtitle_rfq": "Choose a category — the system sends the request to every supplier registered in it.",
+    "change_type": "Change type", "coming_phase": "In development · phase {phase}", "planned": "Planned",
+    "desc_rfq": "Automatic distribution to every supplier in the category, sealed offers, comparison and decision.",
+    "desc_tender": "Digital vault, 3-of-5 opening approval, approved network and device.",
+    "desc_scholarship": "Applications, eligibility checks, scoring and committee.",
+    "desc_call_for_proposals": "Calls for proposals and grants — on the same foundation.",
+    "desc_support": "Support requests for associations and organisations.", "desc_recruitment": "Staff recruitment processes.",
+    "section_request": "Request details", "section_schedule": "Schedule and contact", "section_categories": "Request categories",
+    "categories_hint": "The request goes to every active supplier registered in these categories, their parents and their sub-categories.",
+    "matching_title": "Registered suppliers who will receive it", "matching_sentence": "{count} registered suppliers match this request.",
+    "matching_empty": "Choose a category to see how many suppliers will receive the request.",
+    "fairness_rule": "Council staff cannot add or remove a supplier from this list. Distribution is determined automatically and saved as a signed snapshot.",
+    "show_list": "Show the list", "hide_list": "Hide the list", "list_read_only": "View only — the list cannot be edited.",
+    "publish": "Publish and send to suppliers", "publish_now": "Publish now", "save_draft": "Save as draft",
+    "publish_confirm": "The request will be frozen as a published version and sent now to {count} suppliers. It cannot be edited after publication."
+  },
+  "rfq": {
+    "title": "Request title", "title_placeholder": "e.g. Purchase of 20 desktop computers", "description": "Description", "quantity": "Quantity", "unit": "Unit",
+    "technical_specification": "Technical specification", "additional_requirements": "Additional requirements", "attachments": "Attachments",
+    "attachments_hint": "Specifications and appendices (PDF, Word, Excel). Shown to invited suppliers.",
+    "deadline": "Submission deadline", "deadline_hint": "Israel time. Submissions after this moment are refused by the server.",
+    "expected_delivery": "Expected delivery", "contact_name": "Contact person", "contact_email": "Contact e-mail", "contact_phone": "Phone"
+  },
+  "process": {
+    "timeline": "Process stages", "tab_overview": "Details", "tab_distribution": "Distribution & fairness", "tab_opening": "Vault & opening",
+    "tab_evaluation": "Comparison & decision", "tab_protocols": "Protocols", "tab_audit": "Audit trail",
+    "request_details": "Request details", "categories": "Categories", "published_at": "Published", "created_by": "Created by",
+    "documents": "Process documents", "no_documents": "No documents attached", "contact": "Contact",
+    "participants": "Process participants", "participants_hint": "Only participants may access content after opening",
+    "publish": "Publish", "publish_confirm": "The version will be frozen and sent automatically to every supplier registered in the process categories. It cannot be edited after publication.",
+    "cancelled": "The process was cancelled"
+  },
+  "participation": { "OWNER": "Owner", "TEAM": "Team", "COMMITTEE": "Committee", "OPENING_OFFICIAL": "Opening official", "CONTENT_ACCESS": "Special view permission" },
+  "timeline": {
+    "draft": "Draft", "published": "Published", "notified": "Suppliers notified", "submission": "Submissions", "deadline": "Deadline",
+    "opening": "Opening", "evaluation": "Evaluation", "decision": "Decision", "closed": "Closed", "cancelled": "Cancelled"
+  },
+  "fairness": {
+    "not_published": "Not yet published", "not_published_body": "The distribution list is fixed at the moment of publication.",
+    "banner_title": "Distribution was determined automatically", "banner_body": "Every active supplier registered in the process categories was invited. No manual selection was made, and the list cannot be changed.",
+    "eligible": "Eligible suppliers", "notifications": "Notifications generated", "delivered": "Delivered", "failed": "Failed", "opened": "Opened invitation",
+    "started": "Started a submission", "submitted": "Submitted",
+    "snapshots": "Distribution snapshots", "snapshots_hint": "Each snapshot is sealed with a SHA-256 fingerprint. Suppliers who register after publication are added in a supplemental snapshot.",
+    "snapshot_kind": "Type", "created": "Created", "recipients": "Recipients", "kind_INITIAL": "Initial distribution", "kind_SUPPLEMENTAL": "Supplemental distribution",
+    "recipients_title": "Invited suppliers", "submitted_hidden": "Who submitted is revealed only after the vault is opened.",
+    "supplier": "Supplier", "match_reason": "Match reason", "delivery": "Delivery", "hidden": "Hidden until opening"
+  },
+  "match": { "exact": "Same category", "supplier_broader": "Parent category", "supplier_narrower": "Sub-category" },
+  "delivery": { "SENT": "Delivered", "PENDING": "Queued", "FAILED": "Failed, will retry", "DEAD": "Failed", "NO_EMAIL": "No e-mail", "NONE": "—" },
+  "opening": {
+    "not_published": "Not yet published — there is no vault yet.",
+    "sealed_count": "{count} sealed offers", "opened_count": "{count} offers opened",
+    "sealed_body": "Offers are encrypted. Nobody — including system administrators — can see a price or a document before opening.",
+    "opened_body": "The vault was opened at {at}. All offers were opened together.",
+    "opening_time": "Opening time", "policy_title": "Opening policy", "policy_hint": "Evaluated on the server, for you, right now",
+    "approvals": "Approvals", "decision_APPROVE": "Approved", "decision_REJECT": "Rejected",
+    "open_button": "Open the vault", "confirm": "All {count} offers will open together, every file's integrity will be verified, and every submitter will be notified. This cannot be undone.",
+    "confirm_button": "Open now", "no_permission": "You are not authorised to open this process.",
+    "early_warning": "An attempt to open before the opening time is refused and recorded as a security event.",
+    "result_title": "The vault was opened", "result_body": "{count} offers opened · {files} files verified · integrity failures: {failures}"
+  },
+  "policy": { "time": "Opening time reached", "network": "Council network", "device": "Managed device", "identity": "Identity and authentication", "role": "Role and process participation", "multi_approval": "Required approvals" },
+  "policy_code": {
+    "opening_time_reached": "Time has passed", "before_opening_time": "Opening time not yet reached", "inside_allowed_network": "Request from an approved network",
+    "outside_allowed_network": "Request is not from the council network", "client_ip_unknown": "Network address unknown", "client_ip_invalid": "Invalid network address",
+    "managed_device": "Managed, compliant device", "unmanaged_device": "Device is not managed", "account_inactive": "Account is inactive",
+    "mfa_required": "Multi-factor authentication required", "identity_ok": "Identity verified", "missing_permission": "Missing permission", "not_a_participant": "You are not assigned to this process",
+    "role_ok": "Role is appropriate", "approval_rejected": "An approver rejected", "approvals_satisfied": "{approved} of {required} approvals",
+    "awaiting_approvals": "{approved} of {required} approvals — waiting"
+  },
+  "evaluation": {
+    "sealed_title": "Offers are still sealed", "sealed_body": "The comparison table appears only after the vault is opened.",
+    "no_access": "No access to offer content", "no_access_body": "Content is visible to process participants only, or with an explicit, reasoned grant from the owner.",
+    "no_winner_title": "The system does not choose a winner", "no_winner_body": "The table shows the data as submitted. You can sort it, but the decision rests with authorised council officials.",
+    "comparison": "Comparison table", "comparison_hint": "{count} offers · every view is logged",
+    "supplier": "Supplier", "price": "Price before VAT", "vat": "VAT", "total": "Total", "delivery": "Delivery", "warranty": "Warranty",
+    "payment": "Payment terms", "documents": "Documents", "days": "{n} days", "months": "{n} months",
+    "docs_complete": "Documents complete", "docs_missing": "Documents missing", "integrity_failed": "Integrity failure", "cert_expired": "Expired certificate",
+    "record_decision": "Record decision", "decision_type": "Decision type", "type_AWARD": "Select supplier", "type_NO_AWARD": "No award",
+    "selected": "Selected supplier", "choose_supplier": "Choose a supplier…", "reason": "Reason", "reason_hint": "Stored in the protocol and the audit trail (at least 10 characters).",
+    "save_decision": "Save decision", "decision_note": "The decision is recorded in your name, with time and reason, and every submitter is told a decision was made.",
+    "decision_recorded": "Decision", "decided_by": "Decided by", "decided_at": "Time"
+  },
+  "protocols": {
+    "language": "Protocol language", "generate": "Generate protocol", "close_process": "Close the process",
+    "hint": "The protocol includes distribution, opening, comparison, decision and the audit chain head. Its fingerprint is stored in the audit trail.",
+    "not_yet": "A protocol can be generated after the vault is opened.", "type": "Type", "generated": "Generated", "fingerprint": "Fingerprint", "open": "Open for printing",
+    "type_rfq_opening": "Opening protocol", "type_rfq_decision": "Opening and decision protocol"
+  },
+  "docs": { "proposal": "Quotation", "technical_spec": "Technical specification", "supporting": "Supporting document" },
+  "doc_types": { "bookkeeping": "Bookkeeping certificate", "tax_withholding": "Tax withholding certificate", "insurance": "Insurance certificate", "iso": "ISO standard", "other": "Other" },
+  "supplier_home": {
+    "title": "My opportunities", "subtitle": "Processes sent to you automatically based on the categories you chose.",
+    "welcome_title": "You are registered", "welcome_body": "From now on you will automatically receive every request in your categories. You can update categories and documents in your company profile.",
+    "empty": "No invitations yet", "empty_body": "When the council publishes a process in your field, it will appear here and you will be notified.",
+    "open": "Open", "submitted": "Submitted", "deadline": "Deadline", "view_receipt": "View submission receipt", "submit_offer": "Submit an offer",
+    "my_submission": "My submission", "sealed": "Submitted & sealed", "opened": "Opened", "started": "Started"
+  },
+  "submit": {
+    "title": "Submit an offer", "new_version": "Submit an updated version", "subtitle": "Prices and files are encrypted the moment you submit.",
+    "price": "Price before VAT (₪)", "price_hint": "VAT and total are calculated automatically", "vat": "VAT ({rate}%)", "total": "Total incl. VAT",
+    "delivery_days": "Delivery time (days)", "warranty_months": "Warranty (months)", "payment_terms": "Payment terms", "payment_placeholder": "e.g. net 30",
+    "notes": "Notes", "documents": "Documents", "required": "Required", "optional": "Optional",
+    "seal_note_title": "Your offer will be sealed", "seal_note_body": "Nobody at the council — including system administrators — can see your offer until the joint opening after the deadline.",
+    "submit": "Submit and seal", "confirm": "Submit an offer of {total} including VAT? Until the deadline you can submit a new version that replaces this one.",
+    "confirm_button": "Final submission",
+    "receipt_title": "Submission receipt", "receipt_hint": "Keep this receipt. The fingerprints prove what was submitted and when.", "print": "Print",
+    "reference": "Process", "receipt_number": "Receipt number", "submitted_at": "Submitted", "version": "Version", "receipt_hash": "Receipt fingerprint",
+    "sealed_title": "Your offer is sealed", "sealed_body": "It will be opened only after the deadline, together with all other offers, and you will be notified.",
+    "replace_hint": "Until the deadline you may submit an updated version. Only the latest version is opened.", "replace": "Submit a new version",
+    "closed_title": "Submissions are closed", "closed_body": "The submission deadline has passed.",
+    "opened_title": "The vault was opened", "opened_body": "Offers were opened together after the deadline. You will be notified when a decision is recorded.",
+    "request": "Request details", "fair_title": "You received this invitation automatically",
+    "fair_body": "Every supplier registered in the category received it at exactly the same time. Council staff do not choose who is invited."
+  },
+  "profile": {
+    "title": "Company profile", "subtitle": "Your details, categories and certificates in the supplier registry.", "saved": "Details saved",
+    "categories_saved": "Categories updated", "categories_saved_invites": "Categories updated — {count} invitations to open processes were added",
+    "number_locked": "The company number cannot be changed after registration", "notifications": "Notifications", "notify_email": "By e-mail", "notify_in_app": "In the system",
+    "categories_hint": "Changing categories also invites you automatically to matching open processes",
+    "certificates": "Certificates and documents", "certificates_hint": "Shown to the committee next to every offer, with validity", "add_certificate": "Add certificate",
+    "no_certificates": "No certificates uploaded", "doc_title": "Document", "doc_type": "Type", "issued": "Issued", "expires": "Valid until",
+    "expired": "Expired", "valid": "Valid", "file": "File"
+  },
+  "registry": {
+    "title": "Supplier registry", "subtitle": "Suppliers registered themselves and chose their categories. Distribution to processes derives from this registration only.",
+    "search": "Search by name, number or town…", "category_filter": "Filter by category", "all_categories": "All categories", "count": "{count} suppliers",
+    "empty": "No suppliers found", "categories": "Categories", "registered": "Registered", "status": "Status", "expired_docs": "{count} expired certificates"
+  },
+  "audit": {
+    "title": "Audit trail", "subtitle": "Every important action is written as a signed, chained record. Changing an earlier record is detected by chain verification.",
+    "verify": "Verify the audit chain", "valid": "The chain is intact — {count} events checked", "broken": "Chain damage detected at record {seq}",
+    "events": "Events", "events_hint": "Click a row for details and fingerprints", "severity": "Severity", "all_severities": "All severities",
+    "critical": "Critical", "warning": "Warning", "info": "Info", "time": "Time", "event": "Event", "process": "Process", "actor": "Actor", "hash": "Fingerprint",
+    "verify_only": "Your role may verify the chain's integrity only, without viewing event content."
+  },
+  "events": {
+    "PROCESS_CREATED": "Process created", "PROCESS_UPDATED": "Process updated", "PROCESS_PUBLISHED": "Process published", "PROCESS_CANCELLED": "Process cancelled", "PROCESS_CLOSED": "Process closed",
+    "SUPPLIERS_MATCHED": "Suppliers matched automatically", "NOTIFICATIONS_QUEUED": "Notifications queued", "NOTIFICATION_SENT": "Notification delivered", "NOTIFICATION_FAILED": "Notification failed",
+    "VAULT_CREATED": "Vault created", "SUBMISSION_STARTED": "Supplier started a submission", "SUBMISSION_CREATED": "Offer submitted", "SUBMISSION_UPDATED": "New version submitted",
+    "SUBMISSION_SEALED": "Offer sealed", "FILE_UPLOADED": "File uploaded", "DEADLINE_REACHED": "Deadline reached", "OPENING_REQUESTED": "Opening requested",
+    "OPENING_APPROVED": "Opening approved", "OPENING_REJECTED": "Opening rejected", "VAULT_OPENED": "Vault opened", "PROPOSAL_VIEWED": "Offer viewed",
+    "PROPOSAL_DOWNLOADED": "Offer document downloaded", "DECISION_RECORDED": "Decision recorded", "PROTOCOL_GENERATED": "Protocol generated", "PROTOCOL_VIEWED": "Protocol viewed",
+    "EARLY_OPEN_ATTEMPT": "Early opening attempt", "UNAUTHORIZED_NETWORK_ATTEMPT": "Attempt from unauthorised network", "UNAUTHORIZED_DEVICE_ATTEMPT": "Attempt from unauthorised device",
+    "FAILED_MULTI_APPROVAL": "Multi-approval failure", "SEALED_ACCESS_DENIED": "Access to sealed offer denied", "FILE_INTEGRITY_FAILURE": "File integrity failure",
+    "USER_REGISTERED": "User registered", "SUPPLIER_REGISTERED": "Supplier registered", "SUPPLIER_UPDATED": "Supplier updated", "SUPPLIER_CATEGORY_CHANGED": "Supplier categories changed",
+    "SUPPLIER_DOCUMENT_UPLOADED": "Supplier certificate uploaded", "SUPPLIER_STATUS_CHANGED": "Supplier status changed", "USER_LOGGED_IN": "Signed in", "USER_LOGGED_OUT": "Signed out",
+    "LOGIN_FAILED": "Sign-in failed", "ROLE_GRANTED": "Role granted", "ROLE_REVOKED": "Role revoked", "SELF_GRANT_BLOCKED": "Self-grant blocked",
+    "USER_CREATED": "User created", "USER_ACTIVATED": "User activated", "USER_DEACTIVATED": "User deactivated", "CATEGORY_CREATED": "Category created", "CATEGORY_UPDATED": "Category updated",
+    "INVITATION_OPENED": "Invitation opened", "AUDIT_CHAIN_VERIFIED": "Audit chain verified", "CONTENT_ACCESS_GRANTED": "View permission granted", "PARTICIPANT_ADDED": "Participant added",
+    "USER_PROFILE_UPDATED": "Profile updated"
+  },
+  "users": {
+    "title": "Users & roles", "subtitle": "Council staff, roles and separation of duties.", "add": "New user",
+    "sod_title": "Separation of duties", "sod_body": "You cannot grant a role to yourself. Every business-role grant is logged and reported to oversight. System administrators get no access to offers.",
+    "kind": "User type", "name": "Name", "roles": "Roles", "last_login": "Last sign-in", "you": "you",
+    "grant": "Grant role", "grant_title": "Grant a role to {name}", "revoke": "Revoke role", "role": "Role", "reason": "Reason",
+    "reason_hint": "Stored in the audit trail", "business_alert": "This is a business role — oversight will be alerted about the grant.",
+    "activate": "Activate", "deactivate": "Deactivate", "password_hint": "Leave empty for users who sign in through Entra ID"
+  },
+  "notifications": { "empty": "No notifications", "mark_all": "Mark all as read" },
+  "invite": {
+    "kicker": "Invitation to submit an offer", "body": "This invitation was sent automatically to every supplier registered in the category. Sign in to view the request and submit an offer.",
+    "continue": "Sign in and continue", "invalid": "This invitation link is not valid"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.", "http_500": "Server error. Please try again shortly.", "invalid_credentials": "E-mail or password is incorrect",
+    "rate_limited": "Too many attempts. Try again in a few minutes.", "not_authenticated": "Please sign in again", "forbidden": "You are not permitted to do this",
+    "csrf_failed": "The form expired. Refresh the page and try again.", "not_found": "Not found, or you have no access", "validation_error": "Some fields are not valid",
+    "email_taken": "This e-mail is already registered", "company_number_taken": "This company number is already registered", "category_required": "Choose at least one category",
+    "unknown_category": "Unknown or inactive category", "deadline_passed": "The submission deadline has passed", "not_accepting_submissions": "This process is not accepting submissions",
+    "not_invited": "Your company is not in this process's distribution", "missing_documents": "Required documents are missing", "file_type_not_allowed": "File type not allowed",
+    "file_too_large": "The file is too large", "file_empty": "The file is empty", "file_content_mismatch": "The file content does not match its type",
+    "file_rejected_by_scanner": "The file was blocked by the security scan", "too_many_files": "Too many files", "unknown_document_kind": "Unknown document type",
+    "vault_sealed": "Offers are sealed until opening", "opening_policy_failed": "The opening policy is not satisfied", "not_a_participant": "You are not assigned to this process",
+    "invalid_transition": "This action is not possible at the current stage", "not_publishable": "Cannot publish yet", "deadline_in_past": "The deadline has already passed",
+    "title_required": "A title is required", "reason_required": "A reason is required", "protocol_required": "Generate the protocol before closing",
+    "file_integrity_failure": "The file failed integrity verification and is blocked", "self_grant_forbidden": "You cannot grant a role to yourself", "role_already_granted": "The role is already granted",
+    "opening_already_requested": "An opening request is already pending", "not_editable": "Cannot edit after publication", "reference_taken": "This process number already exists",
+    "process_type_unavailable": "This process type is not available yet", "timezone_required": "Invalid date", "opening_before_deadline": "Opening time is before the deadline",
+    "invalid_submission": "The selected offer is not valid", "submission_required": "Choose an offer", "self_change_forbidden": "You cannot change your own account"
+  }
+}

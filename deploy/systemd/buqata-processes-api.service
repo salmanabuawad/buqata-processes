@@ -1,0 +1,20 @@
+[Unit]
+Description=Buq'ata Digital Processes API (tender.kortexd.com)
+After=network.target postgresql.service
+
+[Service]
+User=buqata-processes
+Group=buqata-processes
+WorkingDirectory=/opt/buqata-processes/backend
+EnvironmentFile=/opt/buqata-processes/.env
+ExecStart=/opt/buqata-processes/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8093 --workers 2 --proxy-headers --forwarded-allow-ips 127.0.0.1
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/buqata-processes/storage /opt/buqata-processes/outbox
+
+[Install]
+WantedBy=multi-user.target
