@@ -199,7 +199,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="min-h-screen">
+    <div className="flex min-h-dvh flex-col">
       <a href="#main" className="skip-link">{t("common.skip_to_content")}</a>
       <header className="no-print sticky top-0 z-30 border-b border-line bg-surface/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-[1400px] items-center gap-3 px-4">
@@ -244,7 +244,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <div className="mx-auto flex max-w-[1400px] gap-6 px-4 py-6">
+      <div className="mx-auto flex w-full max-w-[1400px] flex-1 gap-6 px-4 py-5">
         <aside className="no-print hidden w-60 shrink-0 lg:block">
           <div className="sticky top-22">
             {navList}
@@ -256,7 +256,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </aside>
         <main id="main" className="min-w-0 flex-1">{children}</main>
       </div>
-      <footer className="no-print border-t border-line py-4">
+      <footer className="no-print border-t border-line py-3">
         <Principles />
       </footer>
     </div>

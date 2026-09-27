@@ -156,8 +156,8 @@
     "waiting_for_my_approval": "بانتظار موافقتي",
     "active_tenders": "مناقصات نشطة",
     "coming_phase": "المرحلة {phase}",
-    "expiring_documents": "مستندات مورّدين منتهية / قاربت على الانتهاء",
-    "within_30_days": "خلال 30 يوماً",
+    "expiring_documents": "مستندات مورّدين للتجديد",
+    "within_30_days": "منتهية أو تنتهي خلال 30 يوماً",
     "security_alerts": "تنبيهات أمنية",
     "last_30_days": "آخر 30 يوماً",
     "participation": "مشاركة المورّدين في طلبات عروض الأسعار",
@@ -171,7 +171,8 @@
     "by_status": "الإجراءات حسب الحالة",
     "delivery": "تسليم رسائل البريد",
     "measured": "بيانات مقيسة",
-    "recent_activity": "النشاط الأخير"
+    "recent_activity": "النشاط الأخير",
+    "latest_requests": "آخر {count} طلبات"
   },
   "processes": {
     "title": "الإجراءات",

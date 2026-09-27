@@ -156,8 +156,8 @@
     "waiting_for_my_approval": "Waiting for my approval",
     "active_tenders": "Active tenders",
     "coming_phase": "Phase {phase}",
-    "expiring_documents": "Supplier documents expired / expiring",
-    "within_30_days": "Within 30 days",
+    "expiring_documents": "Supplier documents to renew",
+    "within_30_days": "Expired or expiring within 30 days",
     "security_alerts": "Security alerts",
     "last_30_days": "Last 30 days",
     "participation": "Supplier participation in RFQs",
@@ -171,7 +171,8 @@
     "by_status": "Processes by status",
     "delivery": "E-mail delivery",
     "measured": "Measured data",
-    "recent_activity": "Recent activity"
+    "recent_activity": "Recent activity",
+    "latest_requests": "Latest {count} requests"
   },
   "processes": {
     "title": "Processes",

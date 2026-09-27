@@ -37,10 +37,10 @@ function Overview({ p }: { p: ProcessView }) {
   const { t, locale } = useI18n();
   const d = p.details as { quantity?: number; unit?: string; technical_specification?: string; expected_delivery_date?: string; additional_requirements?: string };
   return (
-    <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+    <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
       <Card>
         <CardHeader title={t("process.request_details")} />
-        <div className="space-y-5 p-5">
+        <div className="space-y-3 p-5">
           {p.description && <p className="whitespace-pre-line text-ink-2">{p.description}</p>}
           <KeyValue items={[
             [t("rfq.quantity"), `${d.quantity ?? "—"} ${d.unit ?? ""}`],
@@ -48,24 +48,27 @@ function Overview({ p }: { p: ProcessView }) {
             [t("process.categories"), <div key="c" className="flex flex-wrap gap-1.5">{p.categories.map((c) => <Badge key={c.id} tone="primary">{c.path}</Badge>)}</div>],
             [t("rfq.deadline"), <span key="d" className="ltr">{formatDateTime(p.submission_deadline, locale)}</span>],
             [t("rfq.expected_delivery"), d.expected_delivery_date ? formatDate(d.expected_delivery_date, locale) : "—"],
-            [t("process.published_at"), <span key="p" className="ltr">{formatDateTime(p.published_at, locale)}</span>],
             [t("process.created_by"), p.created_by ?? "—"],
           ]} />
-          {d.technical_specification && (
-            <div>
-              <h3 className="mb-1 text-sm font-medium">{t("rfq.technical_specification")}</h3>
-              <p className="whitespace-pre-line rounded-lg bg-surface-2 p-3 text-sm text-ink-2">{d.technical_specification}</p>
-            </div>
-          )}
-          {d.additional_requirements && (
-            <div>
-              <h3 className="mb-1 text-sm font-medium">{t("rfq.additional_requirements")}</h3>
-              <p className="whitespace-pre-line text-sm text-ink-2">{d.additional_requirements}</p>
+          {(d.technical_specification || d.additional_requirements) && (
+            <div className={cx("grid gap-4", d.technical_specification && d.additional_requirements && "xl:grid-cols-2")}>
+              {d.technical_specification && (
+                <div>
+                  <h3 className="mb-1 text-sm font-medium">{t("rfq.technical_specification")}</h3>
+                  <p className="whitespace-pre-line rounded-lg bg-surface-2 p-3 text-sm text-ink-2">{d.technical_specification}</p>
+                </div>
+              )}
+              {d.additional_requirements && (
+                <div>
+                  <h3 className="mb-1 text-sm font-medium">{t("rfq.additional_requirements")}</h3>
+                  <p className="whitespace-pre-line text-sm text-ink-2">{d.additional_requirements}</p>
+                </div>
+              )}
             </div>
           )}
         </div>
       </Card>
-      <div className="space-y-6">
+      <div className="space-y-5">
         <Card>
           <CardHeader title={t("process.documents")} />
           <div className="p-5">
@@ -698,9 +701,9 @@ export default function ProcessPage() {
           />
           {error ? <div className="mb-4"><ErrorAlert error={error} /></div> : null}
           {p.status === "CANCELLED" && <div className="mb-4"><Alert tone="danger" title={t("process.cancelled")}>{p.cancelled_reason}</Alert></div>}
-          <Card className="mb-6 p-5"><Timeline stages={p.timeline} /></Card>
+          <Card className="mb-5 px-5 py-3"><Timeline stages={p.timeline} /></Card>
           <Tabs tabs={tabs} value={tab} onChange={setTab} />
-          <div className="mt-6">
+          <div className="mt-5">
             {tab === "overview" && <Overview p={p} />}
             {tab === "distribution" && <Distribution p={p} />}
             {tab === "opening" && <Opening p={p} reload={load} />}

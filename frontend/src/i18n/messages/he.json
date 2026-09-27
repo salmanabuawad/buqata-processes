@@ -156,8 +156,8 @@
     "waiting_for_my_approval": "ממתינים לאישורי",
     "active_tenders": "מכרזים פעילים",
     "coming_phase": "שלב {phase}",
-    "expiring_documents": "מסמכי ספקים שפג תוקפם / עומד לפוג",
-    "within_30_days": "עד 30 יום",
+    "expiring_documents": "מסמכי ספקים לחידוש",
+    "within_30_days": "תוקפם פג או יפוג תוך 30 יום",
     "security_alerts": "התראות אבטחה",
     "last_30_days": "30 הימים האחרונים",
     "participation": "השתתפות ספקים בבקשות להצעת מחיר",
@@ -171,7 +171,8 @@
     "by_status": "הליכים לפי סטטוס",
     "delivery": "מסירת הודעות דוא״ל",
     "measured": "נתונים מדודים",
-    "recent_activity": "פעילות אחרונה"
+    "recent_activity": "פעילות אחרונה",
+    "latest_requests": "{count} הבקשות האחרונות"
   },
   "processes": {
     "title": "הליכים",

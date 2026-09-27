@@ -162,8 +162,10 @@ export function Stat({ label, value, hint, tone = "neutral", icon }: { label: st
         <div className="text-sm text-muted">{label}</div>
         {icon && <div className={cx("opacity-80", accent[tone])}>{icon}</div>}
       </div>
-      <div className={cx("mt-1 text-2xl font-semibold ltr", accent[tone])} style={{ textAlign: "start" }}>{value}</div>
-      {hint && <div className="mt-1 text-xs text-muted">{hint}</div>}
+      <div className="mt-1 flex flex-wrap items-baseline gap-x-2">
+        <span className={cx("text-2xl font-semibold ltr", accent[tone])}>{value}</span>
+        {hint && <span className="text-xs text-muted">{hint}</span>}
+      </div>
     </Card>
   );
 }
@@ -189,7 +191,7 @@ export function Spinner({ label }: { label?: string }) {
 
 export function PageHeader({ title, subtitle, actions, eyebrow }: { title: React.ReactNode; subtitle?: React.ReactNode; actions?: React.ReactNode; eyebrow?: React.ReactNode }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
       <div className="min-w-0">
         {eyebrow && <div className="mb-1 text-sm text-muted">{eyebrow}</div>}
         <h1 className="text-2xl font-semibold tracking-tight text-ink">{title}</h1>
