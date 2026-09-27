@@ -4,7 +4,7 @@
     python -m app.cli seed             baseline data (roles, organization, process types, categories)
     python -m app.cli seed-demo        demonstration data (refused in production)
     python -m app.cli dev-setup        migrate + seed + seed-demo
-    python -m app.cli create-admin --email E --name N --password P
+    python -m app.cli create-admin --email E --name N [--password P]   (or BDP_ADMIN_PASSWORD)
     python -m app.cli deliver          deliver pending notifications once
     python -m app.cli audit-verify     verify the audit hash chain
     python -m app.cli audit-anchor     print the current audit head (for external anchoring)
@@ -41,7 +41,8 @@ def main(argv=None) -> int:
     admin_p = sub.add_parser("create-admin")
     admin_p.add_argument("--email", required=True)
     admin_p.add_argument("--name", required=True)
-    admin_p.add_argument("--password", required=True)
+    # Prefer the environment variable: a --password argument shows in `ps`.
+    admin_p.add_argument("--password", default=None)
     sub.add_parser("deliver")
     sub.add_parser("audit-verify")
     sub.add_parser("audit-anchor")
@@ -73,6 +74,9 @@ def main(argv=None) -> int:
         from app.services.audit import Actor
         from app.services.suppliers import default_organization, grant_role
 
+        import os
+
+        args.password = args.password or os.environ.get("BDP_ADMIN_PASSWORD", "")
         if len(args.password) < 12:
             print("password must be at least 12 characters", file=sys.stderr)
             return 2

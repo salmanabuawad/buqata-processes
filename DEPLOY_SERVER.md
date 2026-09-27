@@ -23,7 +23,8 @@ $env:DEPLOY_SKIP_CONFIRM = "1"; npm run deploy:server:all
 - Backend: the test suite runs first and **aborts the deploy if it fails**; then
   one filtered archive of `backend/` (no `.venv`, no `var/`) is uploaded,
   rsynced to `/opt/buqata-processes/backend`, requirements installed, and
-  `migrate`, `seed`, `seed-demo` run once — before both services restart.
+  `migrate` and `seed` (roles, organization, process types, category tree —
+  no sample data) run once, before both services restart.
   A health check confirms the API is up.
 
 Live app: **https://tender.kortexd.com/**
@@ -42,7 +43,7 @@ Live app: **https://tender.kortexd.com/**
 - **Venv:** `/opt/buqata-processes/venv`
 - **Database:** PostgreSQL, database and role `buqata_processes` (UTF-8)
 - **Secrets:** `/opt/buqata-processes/.env` (mode 600) — written once by the setup script
-- **Files:** `/opt/buqata-processes/storage` (sealed offers are ciphertext), `/opt/buqata-processes/outbox` (demo e-mail)
+- **Files:** `/opt/buqata-processes/storage` (sealed offers are ciphertext), `/opt/buqata-processes/outbox` (e-mail, until SMTP is configured)
 - **Service account:** `buqata-processes` (the API does not run as root)
 
 No Docker: everything runs natively on the host.
@@ -84,13 +85,14 @@ Then deploy:
 | `DEPLOY_APP_URL` | `https://tender.kortexd.com/` | Shown in success message only |
 | `DEPLOY_SKIP_CONFIRM` | (unset) | Set to `1` to skip "Deploy? [y/N]" |
 
-## This host is a demonstration environment
+## Environment on this host
 
-`.env` sets **`ENVIRONMENT=staging`, `DEMO_MODE=true`**: demo data, one-click
-demo sign-in, the development key-management adapter (`LocalKms`, master key
-in `.env`) and e-mail written to `outbox/` instead of sent. For real
-procurement: `ENVIRONMENT=production` (disables demo sign-in and demo seeding;
-`LocalKms` refuses to start), a managed KMS/HSM adapter
+`.env` sets **`ENVIRONMENT=staging`, `DEMO_MODE=false`**: no sample data and no
+one-click demo sign-in (sample data exists only in local development, via
+`python -m app.cli dev-setup`). It still uses the development key-management
+adapter (`LocalKms`, master key in `.env`) and writes e-mail to `outbox/`
+instead of sending it. Before real procurement: `ENVIRONMENT=production`
+(`LocalKms` then refuses to start), a managed KMS/HSM adapter
 (`docs/SECURITY_MODEL.md` §4), `MAIL_BACKEND=smtp`, Entra ID for staff.
 
 ## Checks and operations
@@ -101,7 +103,7 @@ systemctl status buqata-processes-backend buqata-processes-worker --no-pager
 journalctl -u buqata-processes-backend -n 100 --no-pager
 cd /opt/buqata-processes/backend && set -a && . ../.env && set +a
 sudo -u buqata-processes -E ../venv/bin/python -m app.cli audit-verify
-sudo -u buqata-processes -E ../venv/bin/python -m app.cli create-admin --email you@example.com --name "Name" --password '…'
+BDP_ADMIN_PASSWORD='…' sudo -u buqata-processes -E ../venv/bin/python -m app.cli create-admin --email you@example.com --name "Name"
 ```
 
 **Backups:** `pg_dump buqata_processes`, `/opt/buqata-processes/storage`, and the

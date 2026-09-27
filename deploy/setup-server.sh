@@ -61,12 +61,12 @@ if [[ ! -f "$APP_DIR/.env" ]]; then
   VAULT_KEY="$(openssl rand -base64 32 | tr -d '\n')"
   cat > "$APP_DIR/.env" <<ENVEOF
 # Quoted values: valid for systemd EnvironmentFile and for "set -a; . .env".
-# ENVIRONMENT=staging: demonstration host with demo data and the development
+# ENVIRONMENT=staging: no demo data or demo sign-in, but still the development
 # key-management adapter. Real tenders need ENVIRONMENT=production and a
 # managed KMS/HSM (docs/SECURITY_MODEL.md). Back up VAULT_MASTER_KEY separately:
 # sealed offers cannot be opened without it.
 ENVIRONMENT="staging"
-DEMO_MODE="true"
+DEMO_MODE="false"
 EXPOSE_DOCS="false"
 DATABASE_URL="postgresql+psycopg://$DB_USER:$DB_PASS@127.0.0.1:5432/$DB_NAME"
 PUBLIC_BASE_URL="https://$DOMAIN"

@@ -79,7 +79,7 @@ $REMOTE_APP/venv/bin/pip install -q -r $REMOTE_APP/backend/requirements.txt
 chown -R ${APP_USER}:${APP_USER} $REMOTE_APP/backend
 chmod -R u=rwX,go=rX $REMOTE_APP/backend
 cd $REMOTE_APP/backend
-sudo -u $APP_USER env PYTHONPATH=$REMOTE_APP/backend bash -c "cd $REMOTE_APP/backend && set -a && . $REMOTE_APP/.env && set +a && $REMOTE_APP/venv/bin/python -m app.cli migrate && $REMOTE_APP/venv/bin/python -m app.cli seed && $REMOTE_APP/venv/bin/python -m app.cli seed-demo"
+sudo -u $APP_USER env PYTHONPATH=$REMOTE_APP/backend bash -c "cd $REMOTE_APP/backend && set -a && . $REMOTE_APP/.env && set +a && $REMOTE_APP/venv/bin/python -m app.cli migrate && $REMOTE_APP/venv/bin/python -m app.cli seed"
 systemctl restart $SERVICE_NAME $WORKER_NAME
 for i in `$(seq 1 20); do curl -fsS http://127.0.0.1:8097/api/v1/health >/dev/null 2>&1 && break; sleep 1; done
 curl -fsS http://127.0.0.1:8097/api/v1/health && echo
