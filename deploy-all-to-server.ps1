@@ -3,6 +3,20 @@
 # Skip confirmation: $env:DEPLOY_SKIP_CONFIRM = "1"
 
 $ErrorActionPreference = "Stop"
+
+# Deploy committed code only: the scripts upload the working tree, so any
+# uncommitted change (including another session's work in progress) would go
+# live. Override deliberately with $env:DEPLOY_ALLOW_DIRTY = "1".
+if (-not $env:DEPLOY_ALLOW_DIRTY) {
+    $dirty = & git -C $PSScriptRoot status --porcelain
+    if ($LASTEXITCODE -ne 0) { Write-Host "git status failed - deploy aborted." -ForegroundColor Red; exit 1 }
+    if ($dirty) {
+        Write-Host "Uncommitted changes in the repository - deploy aborted:" -ForegroundColor Red
+        $dirty | Select-Object -First 20 | ForEach-Object { Write-Host "  $_" }
+        Write-Host "Commit (or stash) them first, or set DEPLOY_ALLOW_DIRTY=1 on purpose." -ForegroundColor Yellow
+        exit 1
+    }
+}
 $SERVER = if ($env:DEPLOY_HOST) { $env:DEPLOY_HOST } else { "185.229.226.37" }
 $USER = if ($env:DEPLOY_USER) { $env:DEPLOY_USER } else { "root" }
 $REMOTE_PATH = if ($env:DEPLOY_PATH) { $env:DEPLOY_PATH.TrimEnd("/") } else { "/opt/buqata-processes/frontend/dist" }

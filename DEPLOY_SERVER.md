@@ -84,6 +84,7 @@ Then deploy:
 | `BACKEND_SERVICE` | `buqata-processes-backend` | API systemd unit |
 | `DEPLOY_APP_URL` | `https://tender.kortexd.com/` | Shown in success message only |
 | `DEPLOY_SKIP_CONFIRM` | (unset) | Set to `1` to skip "Deploy? [y/N]" |
+| `DEPLOY_ALLOW_DIRTY` | (unset) | The scripts refuse to deploy with uncommitted changes; `1` overrides that on purpose |
 
 ## Environment on this host
 
