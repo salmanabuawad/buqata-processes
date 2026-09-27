@@ -14,10 +14,11 @@ export default function Landing() {
   const home = me ? (me.kind === "supplier" ? "/supplier/" : "/dashboard/") : null;
 
   const principles = [
-    { key: "efficiency", icon: <Zap className="size-5" /> },
-    { key: "transparency", icon: <Eye className="size-5" /> },
-    { key: "equal_opportunity", icon: <Scale className="size-5" /> },
-    { key: "security", icon: <Lock className="size-5" /> },
+    // Tile colours follow the app's meaning: blue = process, green = fairness, purple = sealing.
+    { key: "efficiency", icon: <Zap className="size-5" />, tile: "bg-primary-soft text-primary" },
+    { key: "transparency", icon: <Eye className="size-5" />, tile: "bg-primary-soft text-primary" },
+    { key: "equal_opportunity", icon: <Scale className="size-5" />, tile: "bg-accent-soft text-accent" },
+    { key: "security", icon: <Lock className="size-5" />, tile: "bg-sealed-soft text-sealed" },
   ];
 
   return (
@@ -45,7 +46,7 @@ export default function Landing() {
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 lg:grid-cols-[1.2fr_1fr] lg:py-20">
             <div>
               <p className="mb-3 inline-flex rounded-full bg-surface px-3 py-1 text-sm text-primary shadow-sm">{t("landing.kicker")}</p>
-              <h1 className="text-3xl font-bold leading-tight tracking-tight text-ink sm:text-4xl">{t("landing.title")}</h1>
+              <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-ink sm:text-5xl">{t("landing.title")}</h1>
               <p className="mt-4 max-w-xl text-lg text-ink-2">{t("landing.subtitle")}</p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <LinkButton href="/register/" className="h-12 px-6 text-base">{t("landing.cta_supplier")}<Arrow className="size-4" /></LinkButton>
@@ -73,7 +74,7 @@ export default function Landing() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {principles.map((p) => (
               <Card key={p.key} className="p-5">
-                <div className="flex size-10 items-center justify-center rounded-lg bg-primary-soft text-primary">{p.icon}</div>
+                <div className={`flex size-11 items-center justify-center rounded-xl ${p.tile}`}>{p.icon}</div>
                 <h3 className="mt-3 font-semibold">{t(`principles.${p.key}`)}</h3>
                 <p className="mt-1 text-sm text-muted">{t(`landing.principle_${p.key}`)}</p>
               </Card>

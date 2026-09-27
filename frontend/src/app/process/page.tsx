@@ -293,14 +293,15 @@ function Opening({ p, reload }: { p: ProcessView; reload: () => void }) {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
       <Card className={cx("overflow-hidden", sealed ? "border-sealed/30" : "border-accent/30")}>
-        <div className={cx("flex flex-col items-center px-6 py-10 text-center", sealed ? "bg-sealed-soft" : "bg-accent-soft")}>
-          <div className={cx("flex size-20 items-center justify-center rounded-full", sealed ? "bg-sealed text-white" : "bg-accent text-white")}>
-            {sealed ? <Lock className="size-9" /> : <LockOpen className="size-9" />}
+        <div className={cx("flex flex-col items-center px-6 py-12 text-center", sealed ? "bg-sealed-soft" : "bg-accent-soft")}>
+          <div className={cx("flex size-28 items-center justify-center rounded-full text-white",
+            sealed ? "bg-sealed shadow-[0_16px_40px_rgb(91_63_163/0.3)]" : "bg-accent shadow-[0_16px_40px_rgb(43_116_73/0.3)]")}>
+            {sealed ? <Lock className="size-12" strokeWidth={1.8} /> : <LockOpen className="size-12" strokeWidth={1.8} />}
           </div>
-          <div className={cx("mt-4 text-3xl font-bold", sealed ? "text-sealed" : "text-accent")}>
+          <div className={cx("mt-5 text-4xl font-extrabold", sealed ? "text-sealed" : "text-accent")}>
             {sealed ? t("opening.sealed_count", { count: status.sealed_count }) : t("opening.opened_count", { count: status.sealed_count })}
           </div>
-          <p className="mt-2 max-w-sm text-sm text-ink-2">{sealed ? t("opening.sealed_body") : t("opening.opened_body", { at: formatDateTime(status.opened_at, locale) })}</p>
+          <p className="mt-3 max-w-md text-base leading-relaxed text-ink-2">{sealed ? t("opening.sealed_body") : t("opening.opened_body", { at: formatDateTime(status.opened_at, locale) })}</p>
           {sealed && <p className="mt-3 text-sm"><span className="text-muted">{t("opening.opening_time")}: </span><span className="ltr font-medium">{formatDateTime(status.opening_time, locale)}</span></p>}
         </div>
         {result && (
@@ -690,6 +691,7 @@ export default function ProcessPage() {
             eyebrow={<span className="flex flex-wrap items-center gap-2"><span className="ltr font-medium text-ink-2">{p.reference_number}</span><span>·</span>{t(`types.${p.process_type}`)}</span>}
             title={p.title}
             actions={<>
+              <OpeningModeBadge mode={p.opening_mode} />
               <StatusBadge status={p.status} phase={p.phase} />
               {p.can?.edit && p.status === "DRAFT" && <Button onClick={() => setConfirmPublish(true)}><Send className="size-4 rtl:-scale-x-100" />{t("process.publish")}</Button>}
             </>}
