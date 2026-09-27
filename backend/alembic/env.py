@@ -20,6 +20,12 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     with engine.connect() as connection:
+        if connection.dialect.name == "sqlite":
+            # Batch mode rebuilds a table (copy, DROP, rename). With foreign keys
+            # enforced, dropping a table other rows reference fails, so disable
+            # them for the migration. The pragma must be set outside a transaction.
+            connection.exec_driver_sql("PRAGMA foreign_keys=OFF")
+            connection.commit()
         context.configure(connection=connection, target_metadata=target_metadata,
                           render_as_batch=connection.dialect.name == "sqlite")
         with context.begin_transaction():
