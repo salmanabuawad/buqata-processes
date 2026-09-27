@@ -18,6 +18,17 @@ export interface Me {
   unread_notifications: number;
 }
 
+// Where a signed-in person starts: the first page their permissions open.
+export function homeFor(me: Pick<Me, "kind" | "permissions">): string {
+  if (me.kind === "supplier") return "/supplier/";
+  const has = (p: string) => me.permissions.includes(p);
+  if (has("process.read")) return "/dashboard/";
+  if (has("process.read.own")) return "/processes/";
+  if (has("supplier.registry.read")) return "/suppliers/";
+  if (has("user.manage")) return "/admin/users/";
+  return "/dashboard/";
+}
+
 interface SessionState {
   me: Me | null;
   loading: boolean;

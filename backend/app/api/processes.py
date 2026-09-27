@@ -26,7 +26,8 @@ from app.api.schemas import (
     RecipientChangeBody,
 )
 from app.core import clock
-from app.core.errors import Invalid, NotFound
+from app.core.errors import Conflict, Invalid, NotFound
+from app.core.rbac import permissions_for
 from app.db import get_db
 from app.models import Process, ProcessDocument, ProcessParticipant, User
 from app.processes.registry import get_definition
@@ -46,7 +47,7 @@ from app.services import (
     processes as process_service,
 )
 from app.services.categories import breadcrumb
-from app.services.identity import AuthContext
+from app.services.identity import AuthContext, active_role_keys
 
 router = APIRouter(tags=["processes"])
 
@@ -54,7 +55,7 @@ router = APIRouter(tags=["processes"])
 def process_view(db: Session, ctx: AuthContext, process: Process) -> dict:
     locale = ctx.user.locale or "he"
     definition = get_definition(process.process_type)
-    staff = ctx.has("process.read")
+    staff = authorization.can_read_metadata(db, ctx, process)
     vault_row = process_service.vault_of(db, process)
     counts = process_service.counts(db, process)
     view = {
@@ -112,6 +113,8 @@ def process_view(db: Session, ctx: AuthContext, process: Process) -> dict:
                 and bool(participation & {"OWNER", "TEAM"}),
                 "protocol": ctx.has("protocol.generate") and bool(participation & set(authorization.CONTENT_PARTICIPATIONS)),
                 "monitor": ctx.has("process.monitor"),
+                "add_participants": process.status not in ("CLOSED", "CANCELLED") and ctx.has("process.manage")
+                and "OWNER" in participation,
             },
         })
     return view
@@ -128,8 +131,12 @@ def _get_visible(db: Session, ctx: AuthContext, process_id: uuid.UUID) -> Proces
 def list_processes(process_type: Optional[str] = None, status: Optional[str] = None, q: str = "",
                    limit: int = 50, offset: int = 0, ctx: AuthContext = Depends(current_context),
                    db: Session = Depends(get_db)):
-    authorization.require(ctx, "process.read")
+    authorization.require_any(ctx, ["process.read", "process.read.own"])
     stmt = select(Process)
+    if not ctx.has("process.read"):
+        stmt = stmt.where(Process.id.in_(
+            select(ProcessParticipant.process_id).where(ProcessParticipant.user_id == ctx.user_id,
+                                                        ProcessParticipant.revoked_at.is_(None))))
     if process_type:
         stmt = stmt.where(Process.process_type == process_type)
     if status:
@@ -262,6 +269,26 @@ def remove_recipient(process_id: uuid.UUID, supplier_id: uuid.UUID, body: Recipi
     return {"ok": True}
 
 
+@router.get("/processes/{process_id}/participant-candidates")
+def participant_candidates(process_id: uuid.UUID, ctx: AuthContext = Depends(current_context),
+                           db: Session = Depends(get_db)):
+    """Staff the owner can bring in — those whose roles can open offers or read them."""
+    process = process_service.get(db, process_id)
+    authorization.require_scope(db, ctx, process, "process.manage", ("OWNER",))
+    current = {uuid.UUID(p["user_id"]) for p in reporting.participants(db, process)}
+    useful = {"opening.initiate", "opening.approve", "submission.read_opened"}
+    staff = db.execute(select(User).where(User.kind == "staff", User.is_active.is_(True))
+                       .order_by(User.full_name)).scalars()
+    result = []
+    for user in staff:
+        if user.id in current:
+            continue
+        roles = active_role_keys(db, user.id)
+        if permissions_for(roles) & useful:
+            result.append({"user_id": str(user.id), "name": user.full_name, "roles": sorted(roles)})
+    return result
+
+
 @router.post("/processes/{process_id}/participants")
 def add_participant(process_id: uuid.UUID, body: ParticipantBody, ctx: AuthContext = Depends(current_context),
                     db: Session = Depends(get_db)):
@@ -270,6 +297,10 @@ def add_participant(process_id: uuid.UUID, body: ParticipantBody, ctx: AuthConte
     user = db.get(User, body.user_id)
     if user is None or user.kind != "staff":
         raise Invalid("invalid_user", "Participants must be municipal staff")
+    if db.execute(select(ProcessParticipant.id).where(
+            ProcessParticipant.process_id == process.id, ProcessParticipant.user_id == user.id,
+            ProcessParticipant.participation == body.participation, ProcessParticipant.revoked_at.is_(None))).first():
+        raise Conflict("already_participant", "This person already takes part in the process in this capacity")
     db.add(ProcessParticipant(process_id=process.id, user_id=user.id, participation=body.participation,
                               granted_by=ctx.user_id, reason=body.reason, granted_at=clock.now()))
     audit.record(db, "CONTENT_ACCESS_GRANTED" if body.participation == "CONTENT_ACCESS" else "PARTICIPANT_ADDED",

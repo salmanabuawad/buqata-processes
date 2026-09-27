@@ -68,7 +68,8 @@
     "supplier": "Supplier",
     "applicant": "Scholarship applicant",
     "system": "System",
-    "cli": "Command line"
+    "cli": "Command line",
+    "requester": "Quotation requester"
   },
   "landing": {
     "kicker": "One platform for every council procurement and submission process",
@@ -126,7 +127,8 @@
   "supplier_status": {
     "ACTIVE": "Active",
     "INACTIVE": "Inactive",
-    "SUSPENDED": "Suspended"
+    "SUSPENDED": "Suspended",
+    "ARCHIVED": "Archived"
   },
   "categories": {
     "search": "Search categories…",
@@ -187,7 +189,8 @@
     "status": "Status",
     "deadline": "Deadline",
     "invited": "Invited",
-    "submissions": "Offers"
+    "submissions": "Offers",
+    "subtitle_own": "Quotation requests you opened or were added to"
   },
   "types": {
     "rfq": "Request for quotation",
@@ -281,7 +284,12 @@
     "participants_hint": "Only participants may access content after opening",
     "publish": "Publish",
     "publish_confirm": "The version will be frozen and sent automatically to every supplier registered in the process categories. It cannot be edited after publication.",
-    "cancelled": "The process was cancelled"
+    "cancelled": "The process was cancelled",
+    "add_participant": "Add participant",
+    "add_participant_hint": "Add the procurement team so they can open the offers and decide.",
+    "participant_person": "Staff member",
+    "participant_capacity": "Role in the process",
+    "no_candidates": "No other staff can be added"
   },
   "participation": {
     "OWNER": "Owner",
@@ -550,7 +558,7 @@
   },
   "registry": {
     "title": "Supplier registry",
-    "subtitle": "Suppliers registered themselves and chose their categories. Distribution to processes derives from this registration only.",
+    "subtitle": "Suppliers register themselves or are added by the administrator, and choose their categories. Distribution to processes derives from these categories only.",
     "search": "Search by name, number or town…",
     "category_filter": "Filter by category",
     "all_categories": "All categories",
@@ -559,7 +567,20 @@
     "categories": "Categories",
     "registered": "Registered",
     "status": "Status",
-    "expired_docs": "{count} expired certificates"
+    "expired_docs": "{count} expired certificates",
+    "add": "Add supplier",
+    "new_title": "New supplier",
+    "edit_title": "Edit supplier",
+    "actions": "Actions",
+    "change_status": "Status",
+    "status_title": "Supplier status",
+    "new_status": "New status",
+    "archive_hint": "Archiving removes the supplier from the registry and from future distributions and blocks their sign-in. The history is kept and the supplier can be restored.",
+    "status_filter": "Filter by status",
+    "all_but_archived": "All suppliers (not archived)",
+    "password_hint": "Initial password (at least 10 characters) — hand it to the supplier.",
+    "email_fixed": "The e-mail is used to sign in and cannot be changed here.",
+    "saved": "Supplier saved"
   },
   "audit": {
     "title": "Audit trail",
@@ -638,7 +659,8 @@
     "DISTRIBUTION_EDITED": "Distribution edited at publication",
     "DISTRIBUTION_SUPPLIER_ADDED": "Supplier added manually",
     "DISTRIBUTION_SUPPLIER_REMOVED": "Supplier removed from distribution",
-    "DISTRIBUTION_SUPPLIER_RESTORED": "Supplier restored to distribution"
+    "DISTRIBUTION_SUPPLIER_RESTORED": "Supplier restored to distribution",
+    "SUPPLIER_CREATED": "Supplier added by the administrator"
   },
   "users": {
     "title": "Users & roles",
@@ -723,7 +745,8 @@
     "already_invited": "The supplier is already on the distribution list",
     "supplier_already_submitted": "The supplier has already submitted and cannot be removed",
     "invalid_supplier": "Unknown or inactive supplier",
-    "not_sealed": "Offers in this request are not sealed — there is nothing to open"
+    "not_sealed": "Offers in this request are not sealed — there is nothing to open",
+    "already_participant": "This person already takes part in the process in this capacity"
   },
   "opening_mode": {
     "title": "How offers are opened",

@@ -68,7 +68,8 @@
     "supplier": "ספק",
     "applicant": "מבקש/ת מלגה",
     "system": "מערכת",
-    "cli": "שורת פקודה"
+    "cli": "שורת פקודה",
+    "requester": "מבקש/ת הצעות מחיר"
   },
   "landing": {
     "kicker": "פלטפורמה אחת לכל הליכי הרכש וההגשות במועצה",
@@ -126,7 +127,8 @@
   "supplier_status": {
     "ACTIVE": "פעיל",
     "INACTIVE": "לא פעיל",
-    "SUSPENDED": "מושעה"
+    "SUSPENDED": "מושעה",
+    "ARCHIVED": "בארכיון"
   },
   "categories": {
     "search": "חיפוש תחום…",
@@ -187,7 +189,8 @@
     "status": "סטטוס",
     "deadline": "מועד אחרון",
     "invited": "הוזמנו",
-    "submissions": "הצעות"
+    "submissions": "הצעות",
+    "subtitle_own": "בקשות להצעת מחיר שפתחת או שצורפת אליהן"
   },
   "types": {
     "rfq": "הצעת מחיר",
@@ -281,7 +284,12 @@
     "participants_hint": "רק משתתפים רשאים לגשת לתוכן לאחר הפתיחה",
     "publish": "פרסום",
     "publish_confirm": "הגרסה תיחתם ותישלח אוטומטית לכל הספקים הרשומים בתחומי ההליך. לא ניתן לערוך לאחר הפרסום.",
-    "cancelled": "ההליך בוטל"
+    "cancelled": "ההליך בוטל",
+    "add_participant": "הוספת משתתף",
+    "add_participant_hint": "צרפו את צוות הרכש כדי שיוכל לפתוח את ההצעות ולהחליט.",
+    "participant_person": "עובד/ת",
+    "participant_capacity": "תפקיד בהליך",
+    "no_candidates": "אין עובדים נוספים שניתן לצרף"
   },
   "participation": {
     "OWNER": "אחראי/ת",
@@ -550,7 +558,7 @@
   },
   "registry": {
     "title": "מאגר הספקים",
-    "subtitle": "ספקים שנרשמו בעצמם ובחרו תחומי פעילות. ההפצה להליכים נגזרת מרישום זה בלבד.",
+    "subtitle": "ספקים נרשמים בעצמם או נוספים על ידי מנהל המערכת, ובוחרים תחומי פעילות. ההפצה להליכים נגזרת מתחומים אלה בלבד.",
     "search": "חיפוש לפי שם, ח.פ. או יישוב…",
     "category_filter": "סינון לפי תחום",
     "all_categories": "כל התחומים",
@@ -559,7 +567,20 @@
     "categories": "תחומים",
     "registered": "נרשם",
     "status": "סטטוס",
-    "expired_docs": "{count} אישורים שפגו"
+    "expired_docs": "{count} אישורים שפגו",
+    "add": "הוספת ספק",
+    "new_title": "ספק חדש",
+    "edit_title": "עריכת ספק",
+    "actions": "פעולות",
+    "change_status": "סטטוס",
+    "status_title": "סטטוס ספק",
+    "new_status": "סטטוס חדש",
+    "archive_hint": "העברה לארכיון מסירה את הספק מהמאגר ומהפצות עתידיות וחוסמת את הכניסה שלו. ההיסטוריה נשמרת וניתן לשחזר את הספק.",
+    "status_filter": "סינון לפי סטטוס",
+    "all_but_archived": "כל הספקים (ללא ארכיון)",
+    "password_hint": "סיסמה ראשונית (10 תווים לפחות) — יש למסור אותה לספק.",
+    "email_fixed": "כתובת הדוא\"ל משמשת לכניסה ואינה ניתנת לשינוי כאן.",
+    "saved": "פרטי הספק נשמרו"
   },
   "audit": {
     "title": "יומן ביקורת",
@@ -638,7 +659,8 @@
     "DISTRIBUTION_EDITED": "רשימת התפוצה נערכה בפרסום",
     "DISTRIBUTION_SUPPLIER_ADDED": "ספק נוסף ידנית",
     "DISTRIBUTION_SUPPLIER_REMOVED": "ספק הוסר מהתפוצה",
-    "DISTRIBUTION_SUPPLIER_RESTORED": "ספק הוחזר לתפוצה"
+    "DISTRIBUTION_SUPPLIER_RESTORED": "ספק הוחזר לתפוצה",
+    "SUPPLIER_CREATED": "ספק נוסף על ידי מנהל המערכת"
   },
   "users": {
     "title": "משתמשים והרשאות",
@@ -723,7 +745,8 @@
     "already_invited": "הספק כבר נמצא ברשימת התפוצה",
     "supplier_already_submitted": "הספק כבר הגיש הצעה ולא ניתן להסירו",
     "invalid_supplier": "ספק לא קיים או לא פעיל",
-    "not_sealed": "ההצעות בבקשה זו אינן חתומות — אין מה לפתוח"
+    "not_sealed": "ההצעות בבקשה זו אינן חתומות — אין מה לפתוח",
+    "already_participant": "העובד/ת כבר משתתף/ת בהליך בתפקיד זה"
   },
   "opening_mode": {
     "title": "אופן פתיחת ההצעות",

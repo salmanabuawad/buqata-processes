@@ -6,14 +6,14 @@ import { AuthFrame } from "@/components/AuthFrame";
 import { Badge, Button, Card, ErrorAlert, Field, Input } from "@/components/ui";
 import { useI18n } from "@/i18n/I18nProvider";
 import { api } from "@/lib/api";
-import { useSession } from "@/lib/session";
+import { homeFor, type Me, useSession } from "@/lib/session";
 
 interface DemoUser { id: string; full_name: string; kind: string; roles: string[]; company: string | null }
 
-function destination(kind: string) {
+function destination(me: Me | null) {
   const next = new URLSearchParams(window.location.search).get("next");
   if (next && next.startsWith("/") && !next.startsWith("//")) return next;
-  return kind === "supplier" ? "/supplier/" : "/dashboard/";
+  return me ? homeFor(me) : "/dashboard/";
 }
 
 export default function LoginPage() {
@@ -37,8 +37,7 @@ export default function LoginPage() {
     setError(null);
     try {
       await api.post("/auth/login", { email, password });
-      const me = await refresh();
-      window.location.href = destination(me?.kind ?? "staff");
+      window.location.assign(destination(await refresh()));
     } catch (err) {
       setError(err);
     } finally {
@@ -50,8 +49,7 @@ export default function LoginPage() {
     setError(null);
     try {
       await api.post("/auth/demo-login", { user_id: user.id });
-      await refresh();
-      window.location.href = destination(user.kind);
+      window.location.assign(destination(await refresh()));
     } catch (err) {
       setError(err);
     }

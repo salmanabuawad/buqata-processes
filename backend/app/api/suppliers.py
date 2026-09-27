@@ -10,6 +10,8 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import client_ip, current_context, set_session_cookies
 from app.api.schemas import (
+    SupplierAdminCreate,
+    SupplierAdminUpdate,
     SupplierCategoriesBody,
     SupplierDocumentMeta,
     SupplierRegistration,
@@ -143,6 +145,29 @@ def get_supplier(supplier_id: uuid.UUID, ctx: AuthContext = Depends(current_cont
     authorization.require(ctx, "supplier.registry.read")
     supplier = suppliers.get_with_relations(db, supplier_id)
     return supplier_view(db, supplier, ctx.user.locale)
+
+
+@router.post("/suppliers")
+def create_supplier(body: SupplierAdminCreate, ctx: AuthContext = Depends(current_context),
+                    db: Session = Depends(get_db)):
+    authorization.require(ctx, "supplier.registry.manage")
+    supplier = suppliers.register(db, body.model_dump(), ctx.ip, created_by=ctx.actor())
+    db.commit()
+    return supplier_view(db, suppliers.get_with_relations(db, supplier.id), ctx.user.locale)
+
+
+@router.patch("/suppliers/{supplier_id}")
+def update_supplier(supplier_id: uuid.UUID, body: SupplierAdminUpdate, ctx: AuthContext = Depends(current_context),
+                    db: Session = Depends(get_db)):
+    authorization.require(ctx, "supplier.registry.manage")
+    supplier = suppliers.get_with_relations(db, supplier_id)
+    changes = body.model_dump(exclude_unset=True)
+    category_ids = changes.pop("category_ids", None)
+    suppliers.update_profile(db, supplier, changes, ctx.actor(), by_admin=True)
+    if category_ids:
+        suppliers.set_categories(db, supplier, category_ids, ctx.actor())
+    db.commit()
+    return supplier_view(db, suppliers.get_with_relations(db, supplier.id), ctx.user.locale)
 
 
 @router.patch("/suppliers/{supplier_id}/status")

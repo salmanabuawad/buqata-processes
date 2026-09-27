@@ -28,12 +28,80 @@ interface ProcessView {
   cancelled_reason?: string | null;
   decision?: { decision_type: string; reason: string; supplier_name: string | null; decided_at: string; decided_by: string | null } | null;
   can?: { edit: boolean; open: boolean; read_content: boolean; content_readable_now: boolean; decide: boolean; protocol: boolean;
-    monitor: boolean; edit_distribution: boolean };
+    monitor: boolean; edit_distribution: boolean; add_participants: boolean };
+}
+
+const PARTICIPATIONS = ["TEAM", "OPENING_OFFICIAL", "COMMITTEE", "CONTENT_ACCESS"] as const;
+
+// The owner brings in staff who can open, read and decide — how a requester hands a request to procurement.
+function AddParticipant({ p, reload }: { p: ProcessView; reload: () => void }) {
+  const { t } = useI18n();
+  const [candidates, setCandidates] = useState<{ user_id: string; name: string; roles: string[] }[] | null>(null);
+  const [userId, setUserId] = useState("");
+  const [participation, setParticipation] = useState<string>("TEAM");
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<unknown>(null);
+
+  useEffect(() => {
+    api.get<{ user_id: string; name: string; roles: string[] }[]>(`/processes/${p.id}/participant-candidates`)
+      .then(setCandidates).catch(setError);
+  }, [p.id, p.participants]);
+
+  const add = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      await api.post(`/processes/${p.id}/participants`, { user_id: userId, participation, reason });
+      setUserId("");
+      setReason("");
+      reload();
+    } catch (err) { setError(err); } finally { setBusy(false); }
+  };
+
+  if (candidates === null) return error ? <div className="px-5 py-3"><ErrorAlert error={error} /></div> : null;
+  return (
+    <form onSubmit={add} className="space-y-3 border-t border-line px-5 py-4">
+      <div>
+        <h3 className="text-sm font-medium">{t("process.add_participant")}</h3>
+        <p className="text-xs text-muted">{t("process.add_participant_hint")}</p>
+      </div>
+      <ErrorAlert error={error} />
+      {candidates.length === 0 ? <p className="text-sm text-muted">{t("process.no_candidates")}</p> : (
+        <>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label={t("process.participant_person")} required>
+              {(fid) => (
+                <Select id={fid} required value={userId} onChange={(e) => setUserId(e.target.value)}>
+                  <option value="" disabled>—</option>
+                  {candidates.map((c) => (
+                    <option key={c.user_id} value={c.user_id}>{c.name} · {c.roles.map((r) => t(`roles.${r}`)).join(", ")}</option>
+                  ))}
+                </Select>
+              )}
+            </Field>
+            <Field label={t("process.participant_capacity")} required>
+              {(fid) => (
+                <Select id={fid} value={participation} onChange={(e) => setParticipation(e.target.value)}>
+                  {PARTICIPATIONS.map((k) => <option key={k} value={k}>{t(`participation.${k}`)}</option>)}
+                </Select>
+              )}
+            </Field>
+          </div>
+          <Field label={t("users.reason")} hint={t("users.reason_hint")} required>
+            {(fid) => <Input id={fid} required minLength={5} value={reason} onChange={(e) => setReason(e.target.value)} />}
+          </Field>
+          <Button type="submit" size="sm" busy={busy} disabled={!userId || reason.trim().length < 5}>{t("process.add_participant")}</Button>
+        </>
+      )}
+    </form>
+  );
 }
 
 type TabKey = "overview" | "distribution" | "opening" | "evaluation" | "protocols" | "audit";
 
-function Overview({ p }: { p: ProcessView }) {
+function Overview({ p, reload }: { p: ProcessView; reload: () => void }) {
   const { t, locale } = useI18n();
   const d = p.details as { quantity?: number; unit?: string; technical_specification?: string; expected_delivery_date?: string; additional_requirements?: string };
   return (
@@ -101,6 +169,7 @@ function Overview({ p }: { p: ProcessView }) {
                 </li>
               ))}
             </ul>
+            {p.can?.add_participants && <AddParticipant p={p} reload={reload} />}
           </Card>
         )}
       </div>
@@ -704,7 +773,7 @@ export default function ProcessPage() {
           <Card className="mb-5 px-5 py-3"><Timeline stages={p.timeline} /></Card>
           <Tabs tabs={tabs} value={tab} onChange={setTab} />
           <div className="mt-5">
-            {tab === "overview" && <Overview p={p} />}
+            {tab === "overview" && <Overview p={p} reload={load} />}
             {tab === "distribution" && <Distribution p={p} />}
             {tab === "opening" && <Opening p={p} reload={load} />}
             {tab === "evaluation" && <Evaluation p={p} reload={load} />}

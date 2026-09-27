@@ -20,7 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { LOCALES, useI18n } from "@/i18n/I18nProvider";
-import { useSession } from "@/lib/session";
+import { homeFor, useSession } from "@/lib/session";
 import { api, formatDateTime } from "@/lib/api";
 import { cx, Spinner } from "./ui";
 
@@ -132,7 +132,7 @@ function useNav(): NavItem[] {
   }
   return [
     { href: "/dashboard/", label: t("nav.dashboard"), icon: <LayoutDashboard className="size-4" />, show: can("process.read") },
-    { href: "/processes/", label: t("nav.processes"), icon: <ClipboardList className="size-4" />, show: can("process.read") },
+    { href: "/processes/", label: t("nav.processes"), icon: <ClipboardList className="size-4" />, show: can("process.read") || can("process.read.own") },
     { href: "/processes/new/", label: t("nav.new_process"), icon: <PlusCircle className="size-4" />, show: can("process.create.rfq") },
     { href: "/suppliers/", label: t("nav.suppliers"), icon: <Building2 className="size-4" />, show: can("supplier.registry.read") },
     { href: "/audit/", label: t("nav.audit"), icon: <ScrollText className="size-4" />, show: can("audit.read") || can("audit.verify") },
@@ -172,7 +172,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   if (loading || !me) return <Spinner />;
 
-  const home = me.kind === "supplier" ? "/supplier/" : "/dashboard/";
+  const home = homeFor(me);
   const navList = (
     <nav aria-label={t("nav.main")} className="space-y-1">
       {nav.map((item) => {

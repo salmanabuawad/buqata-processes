@@ -41,7 +41,8 @@ def grant_role(db: Session, user: User, role_key: str, organization_id: uuid.UUI
                     granted_by=granted_by, reason=reason, granted_at=clock.now()))
 
 
-def register(db: Session, data: dict, ip: Optional[str]) -> Supplier:
+def register(db: Session, data: dict, ip: Optional[str], created_by: Optional[Actor] = None) -> Supplier:
+    """Self-registration, or an administrator adding a supplier (`created_by`)."""
     email = data["email"].strip().lower()
     if db.execute(select(User.id).where(User.email == email)).first():
         raise Conflict("email_taken", "An account with this email already exists")
@@ -57,7 +58,8 @@ def register(db: Session, data: dict, ip: Optional[str]) -> Supplier:
                 locale=data.get("locale", "he"), created_at=now)
     db.add(user)
     db.flush()
-    grant_role(db, user, "supplier", org.id, None, "self-registration")
+    grant_role(db, user, "supplier", org.id, created_by.user_id if created_by else None,
+               "added by administrator" if created_by else "self-registration")
     supplier = Supplier(
         id=uuid.uuid4(), organization_id=org.id, company_name=data["company_name"].strip(),
         company_number=data["company_number"].strip(), contact_name=data["contact_name"].strip(),
@@ -72,9 +74,10 @@ def register(db: Session, data: dict, ip: Optional[str]) -> Supplier:
     for c in cats:
         db.add(SupplierCategory(supplier_id=supplier.id, category_id=c.id, added_at=now))
     db.flush()
-    actor = Actor(user.id, "supplier", ip)
-    audit.record(db, "USER_REGISTERED", actor, metadata={"user_id": user.id, "kind": "supplier"})
-    audit.record(db, "SUPPLIER_REGISTERED", actor,
+    actor = created_by or Actor(user.id, "supplier", ip)
+    audit.record(db, "USER_CREATED" if created_by else "USER_REGISTERED", actor,
+                 metadata={"user_id": user.id, "kind": "supplier"})
+    audit.record(db, "SUPPLIER_CREATED" if created_by else "SUPPLIER_REGISTERED", actor,
                  metadata={"supplier_id": supplier.id, "category_ids": sorted(str(c.id) for c in cats)})
     notifications.enqueue(
         db, "SUPPLIER_REGISTERED",
@@ -88,9 +91,15 @@ def register(db: Session, data: dict, ip: Optional[str]) -> Supplier:
     return supplier
 
 
-def update_profile(db: Session, supplier: Supplier, changes: dict, actor: Actor) -> Supplier:
+def update_profile(db: Session, supplier: Supplier, changes: dict, actor: Actor, by_admin: bool = False) -> Supplier:
     allowed = {"company_name", "contact_name", "phone", "address", "city", "website", "description",
                "service_regions", "notify_email", "notify_in_app", "preferred_locale"}
+    if by_admin:
+        allowed.add("company_number")
+        number = changes.get("company_number")
+        if number and number != supplier.company_number and db.execute(
+                select(Supplier.id).where(Supplier.company_number == number)).first():
+            raise Conflict("company_number_taken", "This company number is already registered")
     applied = {}
     for key, value in changes.items():
         if key in allowed and value is not None and getattr(supplier, key) != value:
@@ -137,13 +146,19 @@ def add_document(db: Session, supplier: Supplier, *, doc_type: str, title: str, 
 
 
 def set_status(db: Session, supplier: Supplier, status: str, reason: str, actor: Actor) -> None:
-    if status not in ("ACTIVE", "INACTIVE", "SUSPENDED"):
+    """ARCHIVED is how a supplier is removed: the row stays (distribution snapshots and
+    submissions refer to it), it leaves the registry and matching, and its sign-in is disabled."""
+    if status not in ("ACTIVE", "INACTIVE", "SUSPENDED", "ARCHIVED"):
         raise Invalid("invalid_status", "Unknown supplier status")
     if status == supplier.status:
         return
     previous = supplier.status
     supplier.status = status
     supplier.updated_at = clock.now()
+    if "ARCHIVED" in (status, previous):
+        user_ids = select(SupplierContact.user_id).where(SupplierContact.supplier_id == supplier.id)
+        for user in db.execute(select(User).where(User.id.in_(user_ids))).scalars():
+            user.is_active = status != "ARCHIVED"
     audit.record(db, "SUPPLIER_STATUS_CHANGED", actor,
                  metadata={"supplier_id": supplier.id, "from": previous, "to": status, "reason": reason})
     if status == "ACTIVE":
@@ -171,6 +186,8 @@ def search(db: Session, q: str = "", status: Optional[str] = None, category_id: 
                               Supplier.city.ilike(like)))
     if status:
         stmt = stmt.where(Supplier.status == status)
+    else:
+        stmt = stmt.where(Supplier.status != "ARCHIVED")
     if category_id:
         cat = db.get(Category, category_id)
         if cat is None:

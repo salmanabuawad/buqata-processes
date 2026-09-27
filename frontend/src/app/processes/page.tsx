@@ -34,7 +34,7 @@ export default function ProcessesPage() {
 
   return (
     <AppShell>
-      <PageHeader title={t("processes.title")} subtitle={t("processes.subtitle")}
+      <PageHeader title={t("processes.title")} subtitle={t(can("process.read") ? "processes.subtitle" : "processes.subtitle_own")}
         actions={can("process.create.rfq") && <LinkButton href="/processes/new/"><Plus className="size-4" />{t("nav.new_process")}</LinkButton>} />
       <Card>
         <div className="flex flex-wrap gap-3 border-b border-line p-4">

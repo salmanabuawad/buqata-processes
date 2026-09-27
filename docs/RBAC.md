@@ -25,9 +25,10 @@ satisfies that condition — only the opening workflow does.
 | `template.manage` | Notification templates |
 | `system_log.read` | Technical logs, notification delivery errors |
 | `supplier.registry.read` | Browse the supplier registry |
-| `supplier.registry.manage` | Activate / suspend suppliers |
+| `supplier.registry.manage` | Add, edit, suspend and archive suppliers |
 | `supplier.self` | Maintain one's own supplier profile, categories, certificates |
 | `process.read` | See metadata of all processes (title, status, counts, timeline) |
+| `process.read.own` | The same, only for processes one participates in |
 | `process.create.rfq` / `.tender` / `.scholarship` | Create a process of that type |
 | `process.manage` | Edit drafts, publish, cancel (processes one participates in) |
 | `process.monitor` | Distribution and fairness data |
@@ -45,36 +46,37 @@ satisfies that condition — only the opening workflow does.
 
 ## Roles
 
-| Permission | system_admin | procurement_manager | tender_committee | scholarship_admin | scholarship_committee | auditor | supplier | applicant |
-|---|---|---|---|---|---|---|---|---|
-| system.configure | ✓ | | | | | | | |
-| user.manage | ✓ | | | | | | | |
-| role.assign | ✓ | | | | | | | |
-| category.manage | ✓ | ✓ | | | | | | |
-| template.manage | ✓ | | | | | | | |
-| system_log.read | ✓ | | | | | | | |
-| supplier.registry.read | ✓ | ✓ | | | | ✓ | | |
-| supplier.registry.manage | ✓ | ✓ | | | | | | |
-| supplier.self | | | | | | | ✓ | |
-| process.read | | ✓ | ✓ | ✓ | | ✓ | | |
-| process.create.rfq | | ✓ | | | | | | |
-| process.create.tender | | ✓ | | | | | | |
-| process.create.scholarship | | | | ✓ | | | | |
-| process.manage | | ✓ | | ✓ | | | | |
-| process.monitor | | ✓ | ✓ | ✓ | | ✓ | | |
-| opening.initiate | | ✓ | | | | | | |
-| opening.approve | | ✓ | ✓ | | | | | |
-| submission.create | | | | | | | ✓ | |
-| submission.read_opened | | ✓ | ✓ | | | | | |
-| decision.record | | ✓ | ✓ | ✓ | | | | |
-| protocol.generate | | ✓ | ✓ | ✓ | | | | |
-| protocol.read | | ✓ | ✓ | ✓ | | ✓ | | |
-| audit.read | | | | | | ✓ | | |
-| audit.verify | ✓ | | | | | ✓ | | |
-| committee.review | | | ✓ | | ✓ | | | |
-| scholarship.manage | | | | ✓ | | | | |
-| application.create | | | | | | | | ✓ |
-| security_alert.receive | | | | | | ✓ | | |
+| Permission | system_admin | procurement_manager | requester | tender_committee | scholarship_admin | scholarship_committee | auditor | supplier | applicant |
+|---|---|---|---|---|---|---|---|---|---|
+| system.configure | ✓ | | | | | | | | |
+| user.manage | ✓ | | | | | | | | |
+| role.assign | ✓ | | | | | | | | |
+| category.manage | ✓ | ✓ | | | | | | | |
+| template.manage | ✓ | | | | | | | | |
+| system_log.read | ✓ | | | | | | | | |
+| supplier.registry.read | ✓ | ✓ | | | | | ✓ | | |
+| supplier.registry.manage | ✓ | | | | | | | | |
+| supplier.self | | | | | | | | ✓ | |
+| process.read | | ✓ | | ✓ | ✓ | | ✓ | | |
+| process.read.own | | | ✓ | | | | | | |
+| process.create.rfq | | ✓ | ✓ | | | | | | |
+| process.create.tender | | ✓ | | | | | | | |
+| process.create.scholarship | | | | | ✓ | | | | |
+| process.manage | | ✓ | ✓ | | ✓ | | | | |
+| process.monitor | | ✓ | | ✓ | ✓ | | ✓ | | |
+| opening.initiate | | ✓ | | | | | | | |
+| opening.approve | | ✓ | | ✓ | | | | | |
+| submission.create | | | | | | | | ✓ | |
+| submission.read_opened | | ✓ | | ✓ | | | | | |
+| decision.record | | ✓ | | ✓ | ✓ | | | | |
+| protocol.generate | | ✓ | | ✓ | ✓ | | | | |
+| protocol.read | | ✓ | | ✓ | ✓ | | ✓ | | |
+| audit.read | | | | | | | ✓ | | |
+| audit.verify | ✓ | | | | | | ✓ | | |
+| committee.review | | | | ✓ | | ✓ | | | |
+| scholarship.manage | | | | | ✓ | | | | |
+| application.create | | | | | | | | | ✓ |
+| security_alert.receive | | | | | | | ✓ | | |
 
 Notes:
 
@@ -87,6 +89,15 @@ Notes:
   audited as `CONTENT_ACCESS_GRANTED`.
 * A procurement manager reads content only for processes they participate in
   (as owner or team). The creator is added as `OWNER` automatically.
+* `requester` is department staff: they create quotation requests, publish them
+  and see only the requests they take part in. They cannot open offers, read
+  them or decide; the owner adds procurement staff as participants (with a
+  reason, audited as `PARTICIPANT_ADDED`) and those staff open and decide.
+* Only `system_admin` manages the supplier registry: adding a supplier (with an
+  initial password handed to the supplier), editing its details and categories,
+  and archiving it. Archiving is the removal: the row stays for distribution
+  records and submissions, the supplier leaves the registry and matching, and
+  its sign-in is disabled until restored. Procurement reads the registry.
 * A user may hold several roles; permissions are the union, scope rules still
   apply.
 

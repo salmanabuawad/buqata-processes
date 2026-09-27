@@ -78,7 +78,7 @@ def _raise_security_events(policy: OpeningPolicy, evaluation: PolicyEvaluation, 
 
 
 def status(db: Session, ctx: AuthContext, process: Process) -> dict:
-    authorization.require(ctx, "process.read")
+    authorization.require_metadata(db, ctx, process)
     record = policy_record(db, process)
     request = pending_request(db, process) or db.execute(
         select(OpeningRequest).where(OpeningRequest.process_id == process.id)

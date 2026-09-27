@@ -5,13 +5,13 @@ import { ArrowLeft, ArrowRight, Eye, Lock, Scale, Zap } from "lucide-react";
 import { Emblem, LanguageSwitcher, Principles } from "@/components/AppShell";
 import { Card, LinkButton } from "@/components/ui";
 import { useI18n } from "@/i18n/I18nProvider";
-import { useSession } from "@/lib/session";
+import { homeFor, useSession } from "@/lib/session";
 
 export default function Landing() {
   const { t, dir } = useI18n();
   const { me } = useSession();
   const Arrow = dir === "rtl" ? ArrowLeft : ArrowRight;
-  const home = me ? (me.kind === "supplier" ? "/supplier/" : "/dashboard/") : null;
+  const home = me ? homeFor(me) : null;
 
   const principles = [
     // Tile colours follow the app's meaning: blue = process, green = fairness, purple = sealing.

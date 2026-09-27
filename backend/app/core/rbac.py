@@ -15,9 +15,10 @@ PERMISSIONS: Dict[str, str] = {
     "template.manage": "Notification templates",
     "system_log.read": "Technical logs and delivery errors",
     "supplier.registry.read": "Browse the supplier registry",
-    "supplier.registry.manage": "Activate or suspend suppliers",
+    "supplier.registry.manage": "Add, edit, suspend and archive suppliers",
     "supplier.self": "Maintain one's own supplier profile",
     "process.read": "Process metadata, status and timeline",
+    "process.read.own": "Metadata of the processes one takes part in",
     "process.create.rfq": "Create quotation requests",
     "process.create.tender": "Create tenders",
     "process.create.scholarship": "Create scholarship programs",
@@ -52,11 +53,18 @@ ROLES: Dict[str, dict] = {
         "names": ("מנהל/ת רכש", "مدير المشتريات", "Procurement manager"),
         "business": True,
         "permissions": {
-            "category.manage", "supplier.registry.read", "supplier.registry.manage",
+            "category.manage", "supplier.registry.read",
             "process.read", "process.create.rfq", "process.create.tender", "process.manage",
             "process.monitor", "opening.initiate", "opening.approve", "submission.read_opened",
             "decision.record", "protocol.generate", "protocol.read",
         },
+    },
+    # Department staff: open quotation requests and follow their own. Offers are
+    # opened and decided by procurement staff the requester adds as participants.
+    "requester": {
+        "names": ("מבקש/ת הצעות מחיר", "طالب عروض أسعار", "Quotation requester"),
+        "business": True,
+        "permissions": {"process.read.own", "process.create.rfq", "process.manage"},
     },
     "tender_committee": {
         "names": ("חבר/ת ועדת מכרזים", "عضو لجنة المناقصات", "Tender committee member"),

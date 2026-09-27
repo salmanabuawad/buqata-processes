@@ -63,7 +63,19 @@ def supplier_recipient(db: Session, ctx: AuthContext, process: Process) -> Optio
     ).scalar_one_or_none()
 
 
-def can_view_process(db: Session, ctx: AuthContext, process: Process) -> bool:
+def can_read_metadata(db: Session, ctx: AuthContext, process: Process) -> bool:
+    """Staff view of a process: every process, or only those one takes part in."""
     if ctx.has("process.read"):
+        return True
+    return ctx.has("process.read.own") and bool(participation(db, ctx, process))
+
+
+def require_metadata(db: Session, ctx: AuthContext, process: Process) -> None:
+    if not can_read_metadata(db, ctx, process):
+        raise Forbidden("forbidden", "Missing permission process.read")
+
+
+def can_view_process(db: Session, ctx: AuthContext, process: Process) -> bool:
+    if can_read_metadata(db, ctx, process):
         return True
     return supplier_recipient(db, ctx, process) is not None

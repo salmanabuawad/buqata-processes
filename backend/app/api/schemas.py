@@ -74,12 +74,34 @@ class SupplierUpdate(Strict):
     preferred_locale: Optional[Locale] = None
 
 
+class SupplierAdminCreate(Strict):
+    """An administrator adding a supplier; the initial password is handed to the supplier."""
+    company_name: str = Field(min_length=2, max_length=200)
+    company_number: str = Field(pattern=r"^\d{8,9}$")
+    contact_name: str = Field(min_length=2, max_length=200)
+    email: EmailStr
+    phone: str = Field(min_length=7, max_length=40)
+    password: str = Field(min_length=10, max_length=200)
+    address: str = Field(default="", max_length=300)
+    city: str = Field(default="", max_length=120)
+    website: str = Field(default="", max_length=300)
+    description: str = Field(default="", max_length=3000)
+    service_regions: List[str] = Field(default_factory=list, max_length=20)
+    category_ids: List[uuid.UUID] = Field(min_length=1, max_length=60)
+    locale: Locale = "he"
+
+
+class SupplierAdminUpdate(SupplierUpdate):
+    company_number: Optional[str] = Field(default=None, pattern=r"^\d{8,9}$")
+    category_ids: Optional[List[uuid.UUID]] = Field(default=None, min_length=1, max_length=60)
+
+
 class SupplierCategoriesBody(Strict):
     category_ids: List[uuid.UUID] = Field(min_length=1, max_length=60)
 
 
 class SupplierStatusBody(Strict):
-    status: Literal["ACTIVE", "INACTIVE", "SUSPENDED"]
+    status: Literal["ACTIVE", "INACTIVE", "SUSPENDED", "ARCHIVED"]
     reason: str = Field(min_length=5, max_length=500)
 
 

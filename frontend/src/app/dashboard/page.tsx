@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AlertTriangle, Building2, Clock, FileClock, Inbox, Lock, Plus, ShieldAlert, Users } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
@@ -71,10 +72,17 @@ export default function DashboardPage() {
   const { t, locale } = useI18n();
   const { me, can } = useSession();
   const [data, setData] = useState<Dashboard | null>(null);
+  const router = useRouter();
+  const ownOnly = !!me && !can("process.read") && can("process.read.own");
 
   useEffect(() => {
     if (me && can("process.read")) api.get<Dashboard>("/dashboard/staff").then(setData);
   }, [me, can]);
+  // Requesters have no council-wide dashboard; their requests are their workspace.
+  useEffect(() => {
+    if (ownOnly) router.replace("/processes/");
+  }, [ownOnly, router]);
+  if (ownOnly) return <AppShell><Spinner /></AppShell>;
 
   if (me && !can("process.read")) {
     return (
