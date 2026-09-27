@@ -1,7 +1,8 @@
 {
   "app": {
     "name": "منظومة المشتريات والتقديم الرقمي",
-    "council": "المجلس المحلي بقعاثا"
+    "council": "المجلس المحلي بقعاثا",
+    "document_title": "منظومة المشتريات والتقديم الرقمي — المجلس المحلي بقعاثا"
   },
   "principles": {
     "efficiency": "الكفاءة",
@@ -248,6 +249,7 @@
     "description": "الوصف",
     "quantity": "الكمية",
     "unit": "وحدة القياس",
+    "unit_default": "وحدة",
     "technical_specification": "المواصفات الفنية",
     "additional_requirements": "متطلبات إضافية",
     "attachments": "المرفقات",

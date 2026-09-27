@@ -7,13 +7,13 @@ from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.deps import client_ip, clear_session_cookies, current_context, set_session_cookies
-from app.api.schemas import DemoLoginBody, LoginBody, MeUpdate
+from app.api.deps import clear_session_cookies, client_ip, current_context, set_session_cookies
+from app.api.schemas import DemoLoginBody, LoginBody, MeUpdate, OtpBody
 from app.config import get_settings
 from app.core.errors import DomainError, NotFound
 from app.db import get_db
 from app.models import Supplier, SupplierContact, User
-from app.services import audit, identity, reporting
+from app.services import audit, identity, mfa, reporting
 from app.services.identity import AuthContext, active_role_keys
 
 router = APIRouter(tags=["auth"])
@@ -23,10 +23,10 @@ _attempts: dict = defaultdict(deque)
 _WINDOW, _MAX = 300, 10
 
 
-def _rate_limit(ip: str) -> deque:
-    """Refuse when an address has too many recent *failed* sign-ins."""
+def _rate_limit(key: str) -> deque:
+    """Refuse when an address (or account, for codes) has too many recent *failed* attempts."""
     now = time.monotonic()
-    bucket = _attempts[ip or "?"]
+    bucket = _attempts[key or "?"]
     while bucket and now - bucket[0] > _WINDOW:
         bucket.popleft()
     if len(bucket) >= _MAX:
@@ -39,7 +39,7 @@ def me_view(db: Session, ctx: AuthContext) -> dict:
     return {
         "id": str(ctx.user.id), "email": ctx.user.email, "full_name": ctx.user.full_name, "kind": ctx.user.kind,
         "locale": ctx.user.locale, "roles": sorted(ctx.role_keys), "permissions": sorted(ctx.permissions),
-        "mfa": ctx.mfa, "supplier": {"id": str(supplier.id), "company_name": supplier.company_name} if supplier else None,
+        "mfa": ctx.mfa, "mfa_enrolled": mfa.is_enrolled(ctx.user), "supplier": {"id": str(supplier.id), "company_name": supplier.company_name} if supplier else None,
         "unread_notifications": reporting.unread_notifications(db, ctx.user_id),
     }
 
@@ -49,12 +49,48 @@ def login(body: LoginBody, request: Request, response: Response, db: Session = D
     ip = client_ip(request)
     failures = _rate_limit(ip)
     try:
-        token, csrf, user = identity.login(db, body.email, body.password, ip, request.headers.get("user-agent"))
-    except DomainError:
-        failures.append(time.monotonic())
+        token, csrf, user = identity.login(db, body.email, body.password, ip, request.headers.get("user-agent"),
+                                           body.otp)
+    except DomainError as exc:
+        # Being asked for a code is the normal second step, not a failure.
+        if exc.code != "mfa_required":
+            failures.append(time.monotonic())
         raise
     set_session_cookies(response, token, csrf)
     return {"ok": True, "csrf_token": csrf}
+
+
+def _with_code_limit(ctx: AuthContext, action) -> None:
+    failures = _rate_limit(f"otp:{ctx.user_id}")
+    try:
+        action()
+    except DomainError as exc:
+        if exc.code == "invalid_otp":
+            failures.append(time.monotonic())
+        raise
+
+
+@router.post("/auth/mfa/enroll")
+def mfa_enroll(ctx: AuthContext = Depends(current_context), db: Session = Depends(get_db)):
+    return mfa.start_enrolment(db, ctx)
+
+
+@router.post("/auth/mfa/confirm")
+def mfa_confirm(body: OtpBody, ctx: AuthContext = Depends(current_context), db: Session = Depends(get_db)):
+    _with_code_limit(ctx, lambda: mfa.confirm_enrolment(db, ctx, body.code))
+    return me_view(db, ctx)
+
+
+@router.post("/auth/mfa/verify")
+def mfa_verify(body: OtpBody, ctx: AuthContext = Depends(current_context), db: Session = Depends(get_db)):
+    _with_code_limit(ctx, lambda: mfa.step_up(db, ctx, body.code))
+    return me_view(db, ctx)
+
+
+@router.post("/auth/mfa/disable")
+def mfa_disable(body: OtpBody, ctx: AuthContext = Depends(current_context), db: Session = Depends(get_db)):
+    _with_code_limit(ctx, lambda: mfa.disable(db, ctx, body.code))
+    return me_view(db, ctx)
 
 
 @router.post("/auth/logout")

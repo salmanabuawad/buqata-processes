@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from typing import List, Optional
 
-from sqlalchemy import Boolean, ForeignKey, Index, String, Text, text
+from sqlalchemy import BigInteger, Boolean, ForeignKey, Index, String, Text, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base, JSONType, UTCDateTime
@@ -34,7 +34,10 @@ class User(Base):
     password_hash: Mapped[Optional[str]] = mapped_column(String(300))
     locale: Mapped[str] = mapped_column(String(5), default="he")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    totp_secret: Mapped[Optional[str]] = mapped_column(String(64))
+    # KMS-wrapped TOTP secret (base64). Pending enrolment until totp_enabled_at is set.
+    totp_secret: Mapped[Optional[str]] = mapped_column(String(512))
+    totp_enabled_at: Mapped[Optional[datetime]] = mapped_column(UTCDateTime)
+    totp_last_step: Mapped[Optional[int]] = mapped_column(BigInteger)
     created_at: Mapped[datetime] = created_at_column()
     last_login_at: Mapped[Optional[datetime]] = mapped_column(UTCDateTime)
 

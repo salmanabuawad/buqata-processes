@@ -55,11 +55,18 @@ export function OpeningModeBadge({ mode }: { mode: string | null | undefined }) 
 
 interface SupplierHit { id: string; company_name: string; city: string; status: string; categories: string[] }
 
-/** Search the registry and pick one active supplier, with a mandatory reason. */
-export function AddSupplierModal({ open, onClose, onConfirm, excludeIds, busy, error }: {
+interface AddSupplierProps {
   open: boolean; onClose: () => void; onConfirm: (supplierId: string, name: string, reason: string) => void;
   excludeIds: string[]; busy?: boolean; error?: React.ReactNode;
-}) {
+}
+
+/** Search the registry and pick one active supplier, with a mandatory reason. */
+export function AddSupplierModal(props: AddSupplierProps) {
+  // Mounted only while open, so every opening starts with an empty search and reason.
+  return props.open ? <AddSupplierDialog {...props} /> : null;
+}
+
+function AddSupplierDialog({ onClose, onConfirm, excludeIds, busy, error }: AddSupplierProps) {
   const { t } = useI18n();
   const [q, setQ] = useState("");
   const [hits, setHits] = useState<SupplierHit[] | null>(null);
@@ -67,17 +74,16 @@ export function AddSupplierModal({ open, onClose, onConfirm, excludeIds, busy, e
   const [reason, setReason] = useState("");
 
   useEffect(() => {
-    if (!open) { setQ(""); setPicked(null); setReason(""); return; }
     const handle = setTimeout(() => {
       const params = new URLSearchParams({ status: "ACTIVE", limit: "30" });
       if (q) params.set("q", q);
       api.get<{ items: SupplierHit[] }>(`/suppliers?${params}`).then((r) => setHits(r.items)).catch(() => setHits([]));
     }, 200);
     return () => clearTimeout(handle);
-  }, [q, open]);
+  }, [q]);
 
   return (
-    <Modal open={open} onClose={onClose} title={t("distribution_edit.add_title")}
+    <Modal open onClose={onClose} title={t("distribution_edit.add_title")}
       footer={<>
         <Button variant="ghost" onClick={onClose}>{t("common.cancel")}</Button>
         <Button onClick={() => picked && onConfirm(picked.id, picked.company_name, reason)} busy={busy}

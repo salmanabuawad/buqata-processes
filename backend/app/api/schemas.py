@@ -19,6 +19,11 @@ Locale = Literal["he", "ar", "en"]
 class LoginBody(Strict):
     email: EmailStr
     password: str = Field(min_length=1, max_length=200)
+    otp: Optional[str] = Field(default=None, max_length=12)
+
+
+class OtpBody(Strict):
+    code: str = Field(min_length=6, max_length=12)
 
 
 class DemoLoginBody(Strict):

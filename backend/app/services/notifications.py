@@ -19,10 +19,10 @@ from sqlalchemy import event, or_, select
 from sqlalchemy.orm import Session
 
 from app import db as db_module
+from app.adapters.mail import get_mail_transport
 from app.config import get_settings
 from app.core import clock
 from app.core.rbac import ROLES
-from app.adapters.mail import get_mail_transport
 from app.models import AuditEvent, Notification, NotificationDelivery, Process, Role, User, UserRole
 from app.services import audit
 from app.services.audit import Actor

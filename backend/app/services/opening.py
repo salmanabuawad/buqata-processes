@@ -23,7 +23,8 @@ from app.engines.opening_policy import (
 )
 from app.models import OpeningApproval, OpeningPolicyRecord, OpeningRequest, Process, Submission, User
 from app.processes.registry import get_definition
-from app.services import audit, authorization, notifications, processes as process_service
+from app.services import audit, authorization, notifications
+from app.services import processes as process_service
 from app.services import vault as vault_service
 from app.services.identity import AuthContext
 from app.services.notification_templates import PROCESS_KIND

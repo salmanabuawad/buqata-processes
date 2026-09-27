@@ -94,15 +94,26 @@ def _create_session(db: Session, user: User, ip: Optional[str], user_agent: Opti
     return token, csrf
 
 
-def login(db: Session, email: str, password: str, ip: Optional[str], user_agent: Optional[str]) -> Tuple[str, str, User]:
+def login(db: Session, email: str, password: str, ip: Optional[str], user_agent: Optional[str],
+          otp: Optional[str] = None) -> Tuple[str, str, User]:
+    from app.services import mfa
+
     user = db.execute(select(User).where(User.email == email.strip().lower())).scalar_one_or_none()
     if user is None or not user.is_active or not verify_password(password, user.password_hash):
         audit.record_independent(
             "LOGIN_FAILED", Actor(user.id if user else None, None, ip), metadata={"reason": "invalid_credentials"}
         )
         raise DomainError("invalid_credentials", "Email or password is incorrect", status_code=401)
-    token, csrf = _create_session(db, user, ip, user_agent, ["pwd"])
-    audit.record(db, "USER_LOGGED_IN", Actor(user.id, None, ip), metadata={"method": "password"})
+    try:
+        with_otp = mfa.verify_at_login(user, otp)
+    except DomainError as exc:
+        db.rollback()
+        if exc.code == "invalid_otp":
+            audit.record_independent("LOGIN_FAILED", Actor(user.id, None, ip), metadata={"reason": "invalid_otp"})
+        raise
+    token, csrf = _create_session(db, user, ip, user_agent, ["pwd", "otp"] if with_otp else ["pwd"])
+    audit.record(db, "USER_LOGGED_IN", Actor(user.id, None, ip),
+                 metadata={"method": "password+otp" if with_otp else "password"})
     db.commit()
     return token, csrf, user
 

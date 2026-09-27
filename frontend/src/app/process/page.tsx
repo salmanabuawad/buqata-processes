@@ -288,7 +288,7 @@ function Opening({ p, reload }: { p: ProcessView; reload: () => void }) {
     );
   }
   const sealed = status.vault_status === "SEALED";
-  const beforeDeadline = new Date(status.submission_deadline).getTime() > Date.now();
+  const beforeDeadline = status.phase === "submission_open";
   const icon = (s: string) => s === "PASS" ? <CheckCircle2 className="size-5 text-accent" /> : s === "FAIL" ? <XCircle className="size-5 text-danger" /> : <CircleDashed className="size-5 text-warn" />;
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
@@ -379,6 +379,16 @@ interface ComparisonRow {
 
 type SortKey = "submitted" | "price" | "total" | "delivery" | "warranty";
 
+function SortHeader({ k, sort, onSort, children }: { k: SortKey; sort: SortKey; onSort: (k: SortKey) => void; children: React.ReactNode }) {
+  return (
+    <th aria-sort={sort === k ? "ascending" : undefined}>
+      <button onClick={() => onSort(k)} className={cx("inline-flex items-center gap-1", sort === k && "text-primary")}>
+        {children}<ArrowDownUp className="size-3" aria-hidden />
+      </button>
+    </th>
+  );
+}
+
 function Evaluation({ p, reload }: { p: ProcessView; reload: () => void }) {
   const { t, locale } = useI18n();
   const [rows, setRows] = useState<ComparisonRow[] | null>(null);
@@ -434,14 +444,6 @@ function Evaluation({ p, reload }: { p: ProcessView; reload: () => void }) {
     }
   };
 
-  const SortHeader = ({ k, children }: { k: SortKey; children: React.ReactNode }) => (
-    <th>
-      <button onClick={() => setSort(k)} className={cx("inline-flex items-center gap-1", sort === k && "text-primary")}>
-        {children}<ArrowDownUp className="size-3" />
-      </button>
-    </th>
-  );
-
   return (
     <div className="space-y-6">
       <Alert tone="primary" title={t("evaluation.no_winner_title")}>{t("evaluation.no_winner_body")}</Alert>
@@ -453,11 +455,11 @@ function Evaluation({ p, reload }: { p: ProcessView; reload: () => void }) {
           <thead>
             <tr>
               <th>{t("evaluation.supplier")}</th>
-              <SortHeader k="price">{t("evaluation.price")}</SortHeader>
+              <SortHeader k="price" sort={sort} onSort={setSort}>{t("evaluation.price")}</SortHeader>
               <th>{t("evaluation.vat")}</th>
-              <SortHeader k="total">{t("evaluation.total")}</SortHeader>
-              <SortHeader k="delivery">{t("evaluation.delivery")}</SortHeader>
-              <SortHeader k="warranty">{t("evaluation.warranty")}</SortHeader>
+              <SortHeader k="total" sort={sort} onSort={setSort}>{t("evaluation.total")}</SortHeader>
+              <SortHeader k="delivery" sort={sort} onSort={setSort}>{t("evaluation.delivery")}</SortHeader>
+              <SortHeader k="warranty" sort={sort} onSort={setSort}>{t("evaluation.warranty")}</SortHeader>
               <th>{t("evaluation.payment")}</th>
               <th>{t("evaluation.documents")}</th>
             </tr>
@@ -673,15 +675,12 @@ export default function ProcessPage() {
     } catch (err) { setError(err); } finally { setPublishing(false); }
   };
 
-  const tabs = useMemo(() => {
-    const list: { key: TabKey; label: string; badge?: React.ReactNode }[] = [{ key: "overview", label: t("process.tab_overview") }];
-    if (can("process.monitor")) list.push({ key: "distribution", label: t("process.tab_distribution"), badge: p?.recipient_count ? <Badge>{p.recipient_count}</Badge> : undefined });
-    list.push({ key: "opening", label: t("process.tab_opening"), badge: p?.vault_status === "SEALED" ? <Lock className="size-3.5 text-sealed" /> : undefined });
-    list.push({ key: "evaluation", label: t("process.tab_evaluation") });
-    if (can("protocol.read")) list.push({ key: "protocols", label: t("process.tab_protocols") });
-    if (can("audit.read")) list.push({ key: "audit", label: t("process.tab_audit") });
-    return list;
-  }, [t, can, p?.recipient_count, p?.vault_status]);
+  const tabs: { key: TabKey; label: string; badge?: React.ReactNode }[] = [{ key: "overview", label: t("process.tab_overview") }];
+  if (can("process.monitor")) tabs.push({ key: "distribution", label: t("process.tab_distribution"), badge: p?.recipient_count ? <Badge>{p.recipient_count}</Badge> : undefined });
+  tabs.push({ key: "opening", label: t("process.tab_opening"), badge: p?.vault_status === "SEALED" ? <Lock className="size-3.5 text-sealed" /> : undefined });
+  tabs.push({ key: "evaluation", label: t("process.tab_evaluation") });
+  if (can("protocol.read")) tabs.push({ key: "protocols", label: t("process.tab_protocols") });
+  if (can("audit.read")) tabs.push({ key: "audit", label: t("process.tab_audit") });
 
   return (
     <AppShell>

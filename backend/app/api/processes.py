@@ -38,10 +38,12 @@ from app.services import (
     evaluation,
     notifications,
     opening,
-    processes as process_service,
     protocols,
     reporting,
     submissions,
+)
+from app.services import (
+    processes as process_service,
 )
 from app.services.categories import breadcrumb
 from app.services.identity import AuthContext
@@ -324,7 +326,7 @@ async def submit(process_id: uuid.UUID, payload: str = Form(...), kinds: List[st
     if len(files) > 12:
         raise Invalid("too_many_files", "At most 12 files per submission")
     process = process_service.get(db, process_id)
-    blobs = [(kind, f.filename or "file", await f.read()) for kind, f in zip(kinds, files)]
+    blobs = [(kind, f.filename or "file", await f.read()) for kind, f in zip(kinds, files, strict=True)]
     receipt = submissions.submit(db, ctx, process, parsed, blobs)
     db.commit()
     return receipt

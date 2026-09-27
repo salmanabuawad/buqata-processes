@@ -15,8 +15,8 @@ from app.models import (
     AuditEvent,
     DistributionRecipient,
     DistributionSnapshot,
-    NotificationDelivery,
     Notification,
+    NotificationDelivery,
     OpeningRequest,
     Process,
     ProcessVersion,
@@ -24,7 +24,8 @@ from app.models import (
     User,
 )
 from app.processes.registry import get_definition
-from app.services import audit, authorization, evaluation, processes as process_service
+from app.services import audit, authorization, evaluation
+from app.services import processes as process_service
 from app.services import vault as vault_service
 from app.services.identity import AuthContext
 from app.services.notifications import format_datetime
@@ -57,7 +58,7 @@ LABELS = {
         "chain": "אימות שרשרת", "chain_ok": "תקין", "chain_broken": "נמצאה פגיעה בשרשרת",
         "sign_1": "מנהל/ת רכש", "sign_2": "גזבר/ית", "sign_3": "מורשה חתימה",
         "days": "ימים", "months": "חודשים",
-        "unsealed_note": "הבקשה לא נחתמה: ההצעות היו גלויות לצוות ההליך עם הגשתן, וכל צפייה נרשמה ביומן.", "early_note": "הכספת נפתחה לפני המועד האחרון; הפתיחה סגרה את ההגשה.", "manual_changes": "שינויים ידניים ברשימת התפוצה", "added": "נוסף", "removed": "הוסר", "no_manual_changes": "לא בוצעו שינויים ידניים.", 
+        "unsealed_note": "הבקשה לא נחתמה: ההצעות היו גלויות לצוות ההליך עם הגשתן, וכל צפייה נרשמה ביומן.", "early_note": "הכספת נפתחה לפני המועד האחרון; הפתיחה סגרה את ההגשה.", "manual_changes": "שינויים ידניים ברשימת התפוצה", "added": "נוסף", "removed": "הוסר", "no_manual_changes": "לא בוצעו שינויים ידניים.",
         "footer": "מסמך זה הופק אוטומטית ממערכת ההליכים הדיגיטליים של המועצה. טביעת המסמך נשמרת ביומן הביקורת.",
     },
     "ar": {
@@ -82,7 +83,7 @@ LABELS = {
         "chain": "التحقق من السلسلة", "chain_ok": "سليمة", "chain_broken": "تم اكتشاف خلل في السلسلة",
         "sign_1": "مدير المشتريات", "sign_2": "أمين الصندوق", "sign_3": "صاحب حق التوقيع",
         "days": "أيام", "months": "أشهر",
-        "unsealed_note": "لم يُختم الطلب: كانت العروض ظاهرة لفريق الإجراء عند تقديمها، وسُجّل كل اطلاع في السجل.", "early_note": "فُتحت الخزنة قبل الموعد الأخير؛ وأغلق الفتح باب التقديم.", "manual_changes": "تغييرات يدوية على قائمة التوزيع", "added": "أُضيف", "removed": "أُزيل", "no_manual_changes": "لم تُجرَ تغييرات يدوية.", 
+        "unsealed_note": "لم يُختم الطلب: كانت العروض ظاهرة لفريق الإجراء عند تقديمها، وسُجّل كل اطلاع في السجل.", "early_note": "فُتحت الخزنة قبل الموعد الأخير؛ وأغلق الفتح باب التقديم.", "manual_changes": "تغييرات يدوية على قائمة التوزيع", "added": "أُضيف", "removed": "أُزيل", "no_manual_changes": "لم تُجرَ تغييرات يدوية.",
         "footer": "أُنتج هذا المستند تلقائياً من نظام الإجراءات الرقمية للمجلس. بصمة المستند محفوظة في سجل التدقيق.",
     },
     "en": {
@@ -107,7 +108,7 @@ LABELS = {
         "chain": "Chain verification", "chain_ok": "Valid", "chain_broken": "Chain damage detected",
         "sign_1": "Procurement manager", "sign_2": "Treasurer", "sign_3": "Authorized signatory",
         "days": "days", "months": "months",
-        "unsealed_note": "This request was not sealed: offers were visible to the process team as they arrived, and every view was logged.", "early_note": "The vault was opened before the deadline; opening closed submissions.", "manual_changes": "Manual changes to the distribution list", "added": "Added", "removed": "Removed", "no_manual_changes": "No manual changes were made.", 
+        "unsealed_note": "This request was not sealed: offers were visible to the process team as they arrived, and every view was logged.", "early_note": "The vault was opened before the deadline; opening closed submissions.", "manual_changes": "Manual changes to the distribution list", "added": "Added", "removed": "Removed", "no_manual_changes": "No manual changes were made.",
         "footer": "Generated automatically by the council's digital process platform. The document fingerprint is kept in the audit trail.",
     },
 }

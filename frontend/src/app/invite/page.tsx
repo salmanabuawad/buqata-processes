@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AuthFrame } from "@/components/AuthFrame";
 import { Alert, Card, LinkButton, Spinner } from "@/components/ui";
 import { useI18n } from "@/i18n/I18nProvider";
@@ -15,6 +16,7 @@ export default function InvitePage() {
   const token = useQueryParam("token");
   const [process, setProcess] = useState<{ process_id: string; reference_number: string; title: string } | null>(null);
   const [failed, setFailed] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     if (!token) return;
@@ -23,8 +25,8 @@ export default function InvitePage() {
   }, [token]);
 
   useEffect(() => {
-    if (process && !loading && me?.kind === "supplier") window.location.href = `/supplier/opportunity/?id=${process.process_id}`;
-  }, [process, loading, me]);
+    if (process && !loading && me?.kind === "supplier") router.replace(`/supplier/opportunity/?id=${process.process_id}`);
+  }, [process, loading, me, router]);
 
   const target = process ? `/supplier/opportunity/?id=${process.process_id}` : "/supplier/";
   return (

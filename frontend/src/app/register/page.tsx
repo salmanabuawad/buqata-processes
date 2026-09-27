@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import { AuthFrame } from "@/components/AuthFrame";
 import { CategoryPicker } from "@/components/CategoryPicker";
@@ -12,6 +13,7 @@ import { useSession } from "@/lib/session";
 export default function RegisterPage() {
   const { t, locale } = useI18n();
   const { refresh } = useSession();
+  const router = useRouter();
   const [form, setForm] = useState({
     company_name: "", company_number: "", contact_name: "", email: "", phone: "", password: "",
     address: "", city: "", website: "", description: "",
@@ -29,7 +31,7 @@ export default function RegisterPage() {
     try {
       await api.post("/suppliers/register", { ...form, category_ids: categories, locale, accept_terms: accept, service_regions: [] });
       await refresh();
-      window.location.href = "/supplier/?welcome=1";
+      router.push("/supplier/?welcome=1");
     } catch (err) {
       setError(err);
       window.scrollTo({ top: 0, behavior: "smooth" });

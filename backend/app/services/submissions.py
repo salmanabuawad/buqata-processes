@@ -12,7 +12,8 @@ from app.core import clock
 from app.core.errors import Conflict, Forbidden, Invalid
 from app.models import DistributionRecipient, Process, Submission, SubmissionVersion
 from app.processes.registry import get_definition
-from app.services import audit, authorization, documents, notifications, processes as process_service
+from app.services import audit, authorization, documents, notifications
+from app.services import processes as process_service
 from app.services import vault as vault_service
 from app.services.identity import AuthContext
 from app.services.vault import IncomingFile
@@ -99,7 +100,7 @@ def submit(db: Session, ctx: AuthContext, process: Process, payload: dict,
     audit.record(db, "SUBMISSION_UPDATED" if previous else "SUBMISSION_CREATED", actor,
                  process_id=process.id, submission_id=submission.id,
                  metadata={"version_no": version_no, "payload_hash": sealed.payload_hash})
-    for kind, filename, size, digest in sealed.files:
+    for kind, _filename, size, digest in sealed.files:
         audit.record(db, "FILE_UPLOADED", actor, process_id=process.id, submission_id=submission.id,
                      metadata={"kind": kind, "size": size, "sha256": digest,
                                "sealed": definition.content_sealed(process)})

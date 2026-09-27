@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, useSyncExternalStore } from "react";
+import { useRouter } from "next/navigation";
 import { api, ApiError } from "./api";
 import { useI18n, type Locale } from "@/i18n/I18nProvider";
 
@@ -27,37 +28,43 @@ interface SessionState {
 
 const Ctx = createContext<SessionState | null>(null);
 
+async function loadMe(): Promise<Me | null> {
+  try {
+    return await api.get<Me>("/auth/me");
+  } catch (error) {
+    if (!(error instanceof ApiError && error.status === 401)) console.error(error);
+    return null;
+  }
+}
+
 export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [me, setMe] = useState<Me | null>(null);
   const [loading, setLoading] = useState(true);
   const { setLocale } = useI18n();
+  const router = useRouter();
 
   const refresh = useCallback(async () => {
-    try {
-      const data = await api.get<Me>("/auth/me");
-      setMe(data);
-      return data;
-    } catch (error) {
-      if (!(error instanceof ApiError && error.status === 401)) console.error(error);
-      setMe(null);
-      return null;
-    } finally {
-      setLoading(false);
-    }
+    const data = await loadMe();
+    setMe(data);
+    setLoading(false);
+    return data;
   }, []);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    loadMe().then((data) => {
+      setMe(data);
+      setLoading(false);
+    });
+  }, []);
 
   const logout = useCallback(async () => {
     try {
       await api.post("/auth/logout");
     } finally {
       setMe(null);
-      window.location.href = "/login/";
+      router.replace("/login/");
     }
-  }, []);
+  }, [router]);
 
   // The UI language follows the browser choice; the account locale only seeds it once.
   useEffect(() => {
@@ -81,10 +88,13 @@ export function useSession(): SessionState {
   return ctx;
 }
 
+const noSubscription = () => () => undefined;
+
+// Static export: pages read their `?id=` on the client; the server render sees null.
 export function useQueryParam(name: string): string | null {
-  const [value, setValue] = useState<string | null>(null);
-  useEffect(() => {
-    setValue(new URLSearchParams(window.location.search).get(name));
-  }, [name]);
-  return value;
+  return useSyncExternalStore(
+    noSubscription,
+    () => new URLSearchParams(window.location.search).get(name),
+    () => null,
+  );
 }

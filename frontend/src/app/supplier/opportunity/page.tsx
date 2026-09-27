@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { CheckCircle2, FileText, Lock, ShieldCheck, Upload } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { StatusBadge } from "@/components/EventLabel";
@@ -22,6 +22,13 @@ interface Receipt {
   receipt_number: string; status: string; submitted_at: string | null;
   current_version: { version_no: number; submitted_at: string; payload_hash: string; receipt_hash: string; files: { kind: string; filename: string; size_bytes: number; sha256: string }[] } | null;
   superseded_versions: { version_no: number; submitted_at: string; receipt_hash: string }[];
+}
+
+async function fetchOpportunity(id: string) {
+  const view = await api.get<ProcessView>(`/processes/${id}`);
+  const receipt = await api.get<Receipt | null>(`/processes/${id}/submission`);
+  if (view.phase === "submission_open") await api.post(`/processes/${id}/submission/start`).catch(() => undefined);
+  return { view, receipt };
 }
 
 function ReceiptCard({ r, reference, sealed }: { r: Receipt; reference: string; sealed: boolean }) {
@@ -68,16 +75,11 @@ export default function OpportunityPage() {
   const [confirm, setConfirm] = useState(false);
   const [editing, setEditing] = useState(false);
 
-  const load = useCallback(async () => {
+  useEffect(() => {
+    api.get<{ vat_rate_percent: number }>("/meta").then((m) => setVatRate(m.vat_rate_percent));
     if (!id) return;
-    try {
-      const view = await api.get<ProcessView>(`/processes/${id}`);
-      setP(view);
-      setReceipt(await api.get<Receipt | null>(`/processes/${id}/submission`));
-      if (view.phase === "submission_open") await api.post(`/processes/${id}/submission/start`).catch(() => undefined);
-    } catch (err) { setError(err); }
+    fetchOpportunity(id).then(({ view, receipt }) => { setP(view); setReceipt(receipt); }).catch(setError);
   }, [id]);
-  useEffect(() => { void load(); api.get<{ vat_rate_percent: number }>("/meta").then((m) => setVatRate(m.vat_rate_percent)); }, [load]);
 
   const priceAgorot = Math.round(Number(form.price || 0) * 100);
   const vat = Math.round((priceAgorot * vatRate) / 100);

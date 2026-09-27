@@ -5,6 +5,7 @@
     python -m app.cli seed-demo        demonstration data (refused in production)
     python -m app.cli dev-setup        migrate + seed + seed-demo
     python -m app.cli create-admin --email E --name N [--password P]   (or BDP_ADMIN_PASSWORD)
+    python -m app.cli mfa-reset --email E --reason R   clear a user's authenticator (lost device)
     python -m app.cli deliver          deliver pending notifications once
     python -m app.cli audit-verify     verify the audit hash chain
     python -m app.cli audit-anchor     print the current audit head (for external anchoring)
@@ -23,8 +24,9 @@ from app.config import get_settings
 
 
 def _migrate() -> None:
-    from alembic import command
     from alembic.config import Config
+
+    from alembic import command
 
     cfg = Config(str(Path(__file__).resolve().parent.parent / "alembic.ini"))
     cfg.set_main_option("script_location", str(Path(__file__).resolve().parent.parent / "alembic"))
@@ -43,6 +45,9 @@ def main(argv=None) -> int:
     admin_p.add_argument("--name", required=True)
     # Prefer the environment variable: a --password argument shows in `ps`.
     admin_p.add_argument("--password", default=None)
+    reset_p = sub.add_parser("mfa-reset")
+    reset_p.add_argument("--email", required=True)
+    reset_p.add_argument("--reason", required=True)
     sub.add_parser("deliver")
     sub.add_parser("audit-verify")
     sub.add_parser("audit-anchor")
@@ -68,13 +73,13 @@ def main(argv=None) -> int:
             result = seed_demo(db)
         print("demo data:", "already present" if result.get("skipped") else result)
     if args.command == "create-admin":
+        import os
+
         from app.core.security import hash_password
         from app.models import User
         from app.services import audit
         from app.services.audit import Actor
         from app.services.suppliers import default_organization, grant_role
-
-        import os
 
         args.password = args.password or os.environ.get("BDP_ADMIN_PASSWORD", "")
         if len(args.password) < 12:
@@ -95,6 +100,23 @@ def main(argv=None) -> int:
                          metadata={"user_id": user.id, "role": "system_admin", "via": "cli"})
             db.commit()
         print(f"administrator {email} created")
+    if args.command == "mfa-reset":
+        from app.models import User
+        from app.services import mfa
+        from app.services.audit import Actor
+
+        if len(args.reason.strip()) < 5:
+            print("a reason of at least 5 characters is required", file=sys.stderr)
+            return 2
+        with db_module.SessionLocal() as db:
+            user = db.execute(select(User).where(User.email == args.email.strip().lower())).scalar_one_or_none()
+            if user is None:
+                print("no such user", file=sys.stderr)
+                return 2
+            email = user.email
+            mfa.reset(db, user, Actor(None, "cli", None), args.reason.strip())
+            db.commit()
+        print(f"two-step verification reset for {email}")
     if args.command == "deliver":
         from app.services.notifications import deliver_pending
 

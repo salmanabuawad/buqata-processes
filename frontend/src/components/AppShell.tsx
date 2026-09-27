@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
   Bell,
@@ -160,13 +160,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { me, loading, logout } = useSession();
   const nav = useNav();
   const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const router = useRouter();
+  // The mobile menu belongs to the page it was opened on; navigating closes it.
+  const [mobileOpenOn, setMobileOpenOn] = useState<string | null>(null);
+  const mobileOpen = mobileOpenOn !== null && mobileOpenOn === pathname;
+  const setMobileOpen = (value: boolean) => setMobileOpenOn(value ? pathname : null);
 
   useEffect(() => {
-    if (!loading && !me) window.location.href = `/login/?next=${encodeURIComponent(window.location.pathname + window.location.search)}`;
-  }, [loading, me]);
-
-  useEffect(() => setMobileOpen(false), [pathname]);
+    if (!loading && !me) router.replace(`/login/?next=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+  }, [loading, me, router]);
 
   if (loading || !me) return <Spinner />;
 

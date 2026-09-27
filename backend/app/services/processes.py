@@ -26,7 +26,9 @@ from app.models import (
     Vault,
 )
 from app.processes.registry import get_definition
-from app.services import audit, authorization, categories as category_service, distribution, documents, vault as vault_service
+from app.services import audit, authorization, distribution, documents
+from app.services import categories as category_service
+from app.services import vault as vault_service
 from app.services.identity import AuthContext
 from app.services.suppliers import default_organization
 

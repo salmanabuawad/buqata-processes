@@ -22,7 +22,8 @@ from app.models import (
     User,
     UserRole,
 )
-from app.services import audit, categories as category_service, distribution, documents, notifications
+from app.services import audit, distribution, documents, notifications
+from app.services import categories as category_service
 from app.services.audit import Actor
 
 

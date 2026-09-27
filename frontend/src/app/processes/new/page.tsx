@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Award, FileSearch, Gavel, HandCoins, Megaphone, UsersRound } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { CategoryPicker } from "@/components/CategoryPicker";
@@ -50,17 +51,23 @@ function TypeCards({ onPick }: { onPick: (key: string) => void }) {
   );
 }
 
-function RFQForm() {
-  const { t } = useI18n();
+function initialForm(unit: string) {
   const inAWeek = new Date(Date.now() + 7 * 86400_000);
   inAWeek.setHours(12, 0, 0, 0);
-  const [form, setForm] = useState({
-    title: "", description: "", quantity: "1", unit: "יח'", technical_specification: "", additional_requirements: "",
+  return {
+    title: "", description: "", quantity: "1", unit, technical_specification: "", additional_requirements: "",
     expected_delivery_date: "", deadline: toLocalInput(inAWeek), contact_name: "", contact_email: "", contact_phone: "",
-  });
+  };
+}
+
+function RFQForm() {
+  const { t } = useI18n();
+  const router = useRouter();
+  const [form, setForm] = useState(() => initialForm(t("rfq.unit_default")));
   const [categories, setCategories] = useState<string[]>([]);
   const [files, setFiles] = useState<File[]>([]);
-  const [preview, setPreview] = useState<Preview | null>(null);
+  const [fetchedPreview, setPreview] = useState<Preview | null>(null);
+  const preview = categories.length ? fetchedPreview : null;
   const [showList, setShowList] = useState(false);
   const [busy, setBusy] = useState<"" | "draft" | "publish">("");
   const [error, setError] = useState<unknown>(null);
@@ -76,7 +83,7 @@ function RFQForm() {
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setForm({ ...form, [k]: e.target.value });
 
   useEffect(() => {
-    if (!categories.length) { setPreview(null); return; }
+    if (!categories.length) return;
     const handle = setTimeout(() => {
       api.post<Preview>("/distribution/preview", { category_ids: categories }).then(setPreview).catch(() => setPreview(null));
     }, 250);
@@ -109,7 +116,7 @@ function RFQForm() {
           excluded_supplier_ids: excluded, additional_supplier_ids: added.map((a) => a.id), change_reason: changeReason,
         } : {});
       }
-      window.location.href = `/process/?id=${created.id}`;
+      router.push(`/process/?id=${created.id}`);
     } catch (err) {
       setError(err);
       setConfirm(false);

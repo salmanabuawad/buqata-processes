@@ -223,6 +223,7 @@ export function Tabs<T extends string>({ tabs, value, onChange }: { tabs: { key:
 }
 
 export function Modal({ open, onClose, title, children, footer }: { open: boolean; onClose: () => void; title: React.ReactNode; children: React.ReactNode; footer?: React.ReactNode }) {
+  const { t } = useI18n();
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const dialog = ref.current;
@@ -238,7 +239,7 @@ export function Modal({ open, onClose, title, children, footer }: { open: boolea
     >
       <div className="flex items-center justify-between border-b border-line px-5 py-4">
         <h2 className="text-lg font-semibold">{title}</h2>
-        <button onClick={onClose} className="rounded-md p-1 text-muted hover:bg-surface-2" aria-label="✕">✕</button>
+        <button onClick={onClose} className="rounded-md p-1 text-muted hover:bg-surface-2" aria-label={t("common.close")}><span aria-hidden>✕</span></button>
       </div>
       <div className="max-h-[65vh] overflow-y-auto px-5 py-4">{children}</div>
       {footer && <div className="flex flex-wrap justify-end gap-2 border-t border-line px-5 py-3">{footer}</div>}

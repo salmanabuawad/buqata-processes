@@ -17,7 +17,8 @@ from app.core import clock
 from app.core.errors import Conflict, Forbidden, Invalid, NotFound
 from app.models import Decision, Process, Submission, SubmissionDocument, SupplierDocument
 from app.processes.registry import get_definition
-from app.services import audit, authorization, notifications, processes as process_service
+from app.services import audit, authorization, notifications
+from app.services import processes as process_service
 from app.services import vault as vault_service
 from app.services.distribution import _supplier_user
 from app.services.identity import AuthContext

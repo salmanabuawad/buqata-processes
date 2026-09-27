@@ -1,7 +1,8 @@
 {
   "app": {
     "name": "מערכת רכש והגשות דיגיטלית",
-    "council": "מועצה מקומית בוקעאתא"
+    "council": "מועצה מקומית בוקעאתא",
+    "document_title": "מערכת רכש והגשות דיגיטלית — מועצה מקומית בוקעאתא"
   },
   "principles": {
     "efficiency": "יעילות",
@@ -248,6 +249,7 @@
     "description": "תיאור",
     "quantity": "כמות",
     "unit": "יחידת מידה",
+    "unit_default": "יח'",
     "technical_specification": "מפרט טכני",
     "additional_requirements": "דרישות נוספות",
     "attachments": "קבצים מצורפים",
